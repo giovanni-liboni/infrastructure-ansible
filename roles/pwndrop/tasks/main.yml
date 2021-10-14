@@ -1,0 +1,55 @@
+---
+- name: Ensure pwndrop config directory exists
+  file:
+    path: "{{project_directory}}/pwndroppwndrop/config"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: pwndrop
+
+- name: Ensure pwndrop tree directories exists
+  file:
+    path: "{{permanent_cache_directory}}/pwndroppwndrop"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: pwndrop
+
+# Check if it exists
+# If not, then check if a backup exists
+# If yes, restore the backup
+
+- name: Start pwndrop
+  community.docker.docker_container:
+    name: pwndrop
+    hostname: pwndrop
+    pull: yes
+    image: ghcr.io/linuxserver/pwndrop
+    state: stopped
+    restart_policy: unless-stopped
+    network_mode: default
+    networks_cli_compatible: yes
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    volumes:
+      - "{{permanent_cache_directory}}/pwndrop:/config/data/files:rw"
+      - "{{project_directory}}/pwndrop/config:/config:rw"
+      - "/etc/localtime:/etc/localtime:ro"
+    labels:
+      traefik.http.routers.pwndrop.entrypoints: "websecure"
+      traefik.http.routers.pwndrop.tls: "true"
+      traefik.http.routers.pwndrop.rule: "Host(`share.{{domain_tld}}`)"
+      traefik.http.routers.pwndrop.middlewares: "authelia@docker"
+      traefik.http.routers.pwndrop.service: "pwndrop"
+      traefik.http.routers.pwndrop.tls.certresolver: "dnsChallenge"
+      traefik.http.services.pwndrop.loadbalancer.server.port: "8080"
+      traefik.enable: "true"
+    env:
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+      SECRET_PATH: "{{pwndrop_secret_path}}"
+  tags: pwndrop

@@ -1,0 +1,88 @@
+---
+- name: Ensure VS Code Directories Exist
+  file:
+    path: "{{project_directory}}/vscode/config"
+    state: directory
+  tags: vscode
+
+- name: Add config directory to the list of volumes
+  set_fact:
+   vscode_volumes: "{{ vscode_volumes + [item] }}"
+  with_items:
+   - "{{ project_directory }}/vscode/config:/config"
+   - "/etc/localtime:/etc/localtime:ro"
+
+- name: Create VS Code Docker Container
+  community.general.docker_container:
+    name: vscode
+    image: "linuxserver/code-server:{{vscode_version}}"
+    pull: yes
+    hostname: vscode
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      TZ: "{{default_timezone}}"
+      PASSWORD: "{{vscode_password}}"
+      SUDO_PASSWORD: "{{vscode_sudo_password}}"
+      PROXY_DOMAIN: "{{vscode_tld}}"
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      DOCKER_USER: docker
+    volumes: '{{vscode_volumes}}'
+    labels:
+      traefik.http.routers.vscode.entrypoints: "websecure"
+      traefik.http.routers.vscode.tls: "true"
+      traefik.http.routers.vscode.rule: "Host(`{{vscode_tld}}`)"
+      traefik.http.routers.vscode.middlewares: "authelia@docker"
+      traefik.http.routers.vscode.service: "vscode"
+      traefik.http.routers.vscode.tls.certresolver: "dnsChallenge"
+      traefik.http.services.vscode.loadbalancer.server.port: "8443"
+      traefik.enable: "true"
+  tags: vscode
+
+- name: Set the default GIT user
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "git config --global user.name 'Giovanni LIBONI'"
+  tags: vscode
+
+- name: Set the default GIT email
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "git config --global user.email 'giovanni@liboni.me'"
+  tags: vscode
+
+- name: Create the directory for the id_rsa
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "mkdir -p /config/.ssh"
+  tags: vscode
+
+- name: Set the private key
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "echo '{{ssh_key_codeserver}}' > /config/.ssh/id_rsa"
+  tags: vscode
+
+- name: Set the right owner
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "chown abc /config/.ssh/id_rsa"
+  tags: vscode
+
+- name: Set the right permissions
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "chmod 644 /config/.ssh/id_rsa"
+  tags: vscode
+
+- name: Update apt
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "apt update"
+  tags: vscode
+  
+- name: Install Chromium
+  ansible.builtin.shell: docker exec -u 0 vscode bash -c "apt install -y chromium-browser"
+  tags: vscode
+
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+  set_fact:
+   fqdn_services: "{{ fqdn_services + [item] }}"
+  with_items:
+   - "{{vscode_tld}}"

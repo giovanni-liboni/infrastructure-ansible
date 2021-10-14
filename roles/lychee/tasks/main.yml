@@ -1,0 +1,63 @@
+---
+- name: Ensure lychee Directories Exist
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  loop:
+    - "{{photo_directory}}/lychee/uploads"
+    - "{{photo_directory}}/lychee/sym"
+    - "{{project_directory}}/lychee/config"
+  tags: lychee
+
+- import_tasks: roles/mariadb/tasks/database_manager.yml
+  vars:
+    database_name: "lychee"
+    database_user: "{{photoprism_database_user}}"
+    database_password: "{{photoprism_database_password}}"
+  tags: lychee
+
+- name: Create lychee Docker Container
+  community.general.docker_container:
+    name: lychee
+    image: "lycheeorg/lychee:{{lychee_version}}"
+    pull: yes
+    hostname: lychee
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{photo_directory}}/lychee/uploads:/uploads"
+      - "{{photo_directory}}/lychee/sym:/sym"
+      - "{{project_directory}}/lychee/config:/conf"
+    env:
+      PHP_TZ: "{{default_timezone}}"
+      DB_CONNECTION: "mysql"
+      DB_HOST: "mariadb"
+      DB_PORT: "3306"
+      DB_DATABASE: "lychee"
+      DB_USERNAME: "{{photoprism_database_user}}"
+      DB_PASSWORD: "{{photoprism_database_password}}"
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+    labels:
+      traefik.http.routers.lychee.entrypoints: "websecure"
+      traefik.http.routers.lychee.tls: "true"
+      traefik.http.routers.lychee.rule: "Host(`photo-1.{{project_tld}}`)"
+      traefik.http.routers.lychee.middlewares: "authelia@docker"
+      traefik.http.routers.lychee.service: "lychee"
+      traefik.http.services.lychee.loadbalancer.server.port: "80"
+      traefik.http.routers.lychee.tls.certresolver: "dnsChallenge"
+      traefik.enable: "true"
+  tags: lychee
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+  set_fact:
+    fqdn_services: "{{ fqdn_services + [item] }}"
+  with_items:
+    - "photo-1.{{project_tld}}"

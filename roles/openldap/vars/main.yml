@@ -1,0 +1,3 @@
+---
+ldap_admin_password: '{{vault_ldap_admin_password}}'
+ldap_base_dn: "{{vault_base_dn}}"

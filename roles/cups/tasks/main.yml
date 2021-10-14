@@ -1,0 +1,27 @@
+---
+# tasks file for installing HP Linux driver https://gist.github.com/taniwallach/f1f6c81ce19b7d68f74d4b71d1db57a2
+- name: Install defaults packages
+  package:
+    name:
+      - unzip
+      - foomatic-db-compressed-ppds
+      - foomatic-db
+    state: present
+
+- name: ensure uld directory exists
+  file:
+    path: /tmp/uld
+    state: directory
+
+- name: Extract ULDLINUX_V1.00.39_00.12.zip into /tmp
+  ansible.builtin.unarchive:
+    src: files/ULDLINUX_V1.00.39_00.12.zip
+    dest: /tmp
+    creates: /tmp/ULDLINUX_V1.00.39_00.12/uld.tar.gz
+
+- name: Extract uld.tar.gz to /tmp/uld
+  ansible.builtin.unarchive:
+    src: /tmp/ULDLINUX_V1.00.39_00.12/uld.tar.gz
+    dest: /tmp
+    remote_src: yes
+    creates: /uld/install-printer.sh

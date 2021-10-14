@@ -1,0 +1,77 @@
+---
+# ---
+# version: "2.1"
+# services:
+#   syncthing:
+#     image: ghcr.io/linuxserver/syncthing
+#     container_name: syncthing
+#     hostname: syncthing #optional
+#     environment:
+#       - PUID=1000
+#       - PGID=1000
+#       - TZ=Europe/London
+#     volumes:
+#       - /path/to/appdata/config:/config
+#       - /path/to/data1:/data1
+#       - /path/to/data2:/data2
+#     ports:
+#       - 8384:8384
+#       - 22000:22000
+#       - 21027:21027/udp
+#     restart: unless-stopped
+
+
+- name: Ensure syncthing Configuration Directory Exists
+  file:
+    path: "{{project_directory}}/syncthing"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: syncthing
+
+- name: Ensure syncthing Data Directory Exists
+  file:
+    path: "{{permanent_cache_directory}}/syncthing"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: syncthing
+
+- name: Create Synchthing Docker Container
+  community.general.docker_container:
+    name: syncthing
+    image: "ghcr.io/linuxserver/syncthing:{{syncthing_version}}"
+    pull: yes
+    hostname: syncthing
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    published_ports:
+      - 22000:22000
+      - 21027:21027/udp
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      AUTO_UPDATE: 'true'
+    volumes:
+      - "{{project_directory}}/syncthing:/config"
+      - "{{permanent_cache_directory}}/syncthing:/data"
+      - "/etc/localtime:/etc/localtime:ro"
+    labels:
+      traefik.http.routers.syncthing.entrypoints: "websecure"
+      traefik.http.routers.syncthing.tls: "true"
+      traefik.http.routers.syncthing.rule: "Host(`syncthing.{{project_tld}}`)"
+      traefik.http.routers.syncthing.middlewares: "authelia@docker"
+      traefik.http.routers.syncthing.service: "syncthing"
+      traefik.http.routers.syncthing.tls.certresolver: "dnsChallenge"
+      traefik.http.services.syncthing.loadbalancer.server.port: "8384"
+      traefik.enable: "true"
+  tags: syncthing

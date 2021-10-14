@@ -1,0 +1,114 @@
+---
+- name: Ensure Traefik Directory Exist
+  file:
+    path: "{{ project_directory }}/traefik"
+    state: directory
+  tags: traefik
+
+# - name: Ensure Acme File Exists
+#   copy:
+#     content: ""
+#     dest: "{{project_directory}}/traefik/acme.json"
+#     force: no
+#     owner: root
+#     mode: 0600
+#   no_log: false
+#   tags: traefik
+
+- name: Ensure Acme File Exists
+  file:
+    path: "{{project_directory}}/traefik/letsencrypt/acme.json"
+    owner: root
+    mode: 0600
+    state: touch
+  no_log: false
+  tags: traefik
+
+- name: Ensure Traefik Configuration Files Exist
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+  with_items:
+    - {src: config.yml.j2,dest: "{{project_directory}}/traefik/config.yml"}
+    - {src: traefik-conf.yml.j2,dest: "{{project_directory}}/traefik/traefik-conf.yml"}
+  tags: traefik
+  no_log: false
+  notify: restart traefik
+
+- name: Ensure the network exists
+  community.docker.docker_network:
+    name: proxy
+
+- name: Create Traefik Docker Container
+  community.general.docker_container:
+    name: traefik
+    image: "traefik:{{traefik_version}}"
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    pull: yes
+    hostname: traefik
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    env:
+      CLOUDFLARE_EMAIL: "{{cloudflare_email}}"
+      CLOUDFLARE_DNS_API_TOKEN: "{{cloudflare_token}}"
+      TZ: "{{default_timezone}}"
+    published_ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+      # - 6881:6881
+      # - 5005:5005
+      # - 6881:6881/udp
+      # - 51820:51820/udp
+      # - 8443:8443
+      # - 69:69/udp
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/traefik/traefik-conf.yml:/traefik.yml:ro"
+      - "{{project_directory}}/traefik/letsencrypt/acme.json:/acme.json"
+      - "{{project_directory}}/traefik/config.yml:/config.yml:ro"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.http-catchall.entrypoints: "web"
+      traefik.http.routers.http-catchall.rule: "hostregexp(`{any:.+}`)"
+      traefik.http.routers.http-catchall.middlewares: "redirect-to-https"
+      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: "https"
+      traefik.http.routers.traefiksecure.entrypoints: "websecure"
+      traefik.http.routers.traefiksecure.rule: "Host(`api.{{project_tld}}`)"
+      traefik.http.routers.traefiksecure.tls: "true"
+      traefik.http.routers.traefiksecure.service: "api@internal"
+      traefik.http.routers.wildcard.tls.certresolver: "dnsChallenge"
+      traefik.http.routers.wildcard.tls.domains[0].main: "{{project_tld}}"
+      traefik.http.routers.wildcard.tls.domains[0].sans: "*.{{project_tld}}"
+      traefik.http.routers.wildcard.tls.domains[0].main: "{{domain_tld}}"
+      traefik.http.routers.wildcard.tls.domains[0].sans: "*.{{domain_tld}}"
+      traefik.http.middlewares.authelia.forwardauth.address: "http://authelia:9091/api/verify?rd=https://login.{{domain_tld}}"
+      traefik.http.middlewares.authelia.forwardauth.trustForwardHeader: "true"
+      traefik.http.middlewares.authelia.forwardauth.authResponseHeaders: "Remote-User, Remote-Groups, Remote-Name, Remote-Email"
+      traefik.http.middlewares.authelia-basic.forwardauth.address: "http://authelia:9091/api/verify?auth=basic"
+      traefik.http.middlewares.authelia-basic.forwardauth.trustForwardHeader: "true"
+      traefik.http.middlewares.authelia-basic.forwardauth.authResponseHeaders: "Remote-User, Remote-Groups, Remote-Name, Remote-Email"
+
+      traefik.tcp.routers.ldaps1-rtr.entrypoints: "ldaps"
+      traefik.tcp.routers.ldaps1-rtr.tls: "true"
+      traefik.tcp.routers.ldaps1-rtr.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.ldaps1-rtr.service: "ldap1-service@file"
+
+      traefik.tcp.routers.ldap1-rtr.entrypoints: "ldap"
+      traefik.tcp.routers.ldap1-rtr.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.ldap1-rtr.service: "ldap1-service@file"
+
+      traefik.enable: "true"
+  tags: traefik
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+  set_fact:
+   fqdn_services: "{{ fqdn_services + [item] }}"
+  with_items:
+   - "api.{{project_tld}}"

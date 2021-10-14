@@ -1,0 +1,34 @@
+---
+- name: Ensure MariaDB Directory Exist
+  file:
+    path: "{{project_directory}}/mariadb/{{item}}"
+    state: directory
+  with_items:
+    - "config"
+    - "data"
+  tags: mariadb
+
+- name: Create MariaDB Docker Container
+  community.general.docker_container:
+    name: mariadb
+    image: "linuxserver/mariadb:{{mariadb_version}}"
+    pull: yes
+    hostname: mariadb
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    published_ports:
+      - "{{mariadb_port}}:3306"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      MYSQL_ROOT_PASSWORD: "{{mariadb_root_password}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/mariadb/config:/config"
+      - "{{project_directory}}/mariadb/data:/var/lib/mysql"
+  tags: mariadb

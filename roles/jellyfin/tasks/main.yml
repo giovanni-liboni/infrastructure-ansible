@@ -1,0 +1,65 @@
+---
+- name: Ensure Jellyfin Directory Exist
+  file:
+    path: "{{project_directory}}/jellyfin"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: jellyfin
+
+- name: Ensure handbrake tree directories exists
+  file:
+    path: "{{permanent_cache_directory}}/docker/jellyfin/{{ item.dir }}"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  loop:
+    - { dir: cache }
+    - { dir: transcodes }
+
+# Added to fix System.IO.IOException: The configured user limit (8192) on the number of inotify watches has been reached, or the operating system failed to allocate a required resource.
+- ansible.posix.sysctl:
+    name: fs.inotify.max_user_watches
+    value: '524288'
+    state: present
+    reload: yes
+
+- name: Create Jellyfin Docker Container
+  community.general.docker_container:
+    name: jellyfin
+    hostname: jellyfin
+    container_default_behavior: compatibility
+    network_mode: default
+    image: "linuxserver/jellyfin:{{jellyfin_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    devices:
+     - "/dev/dri:/dev/dri"
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      JELLYFIN_PublishedServerUrl: '{{jellyfin_tld}}' # To support the auto-discobery on the local network. It can cause problems when accesed from the external.
+      HTTP_PROXY: "http://flaresolverr:8191"
+      HTTPS_PROXY: "https://flaresolverr:8191"
+    volumes:
+      - "{{project_directory}}/jellyfin:/config"
+      - "{{permanent_cache_directory}}/docker/jellyfin/cache:/cache"
+      - "{{permanent_cache_directory}}/docker/jellyfin/transcodes:/config/data/transcodes"
+      - "{{data_directory}}:/media"
+    labels:
+      traefik.http.routers.jellyfin.entrypoints: "websecure"
+      traefik.http.routers.jellyfin.tls: "true"
+      traefik.http.routers.jellyfin.rule: "Host(`{{jellyfin_tld}}`)"
+      traefik.http.routers.jellyfin.service: "jellyfin"
+      traefik.http.services.jellyfin.loadbalancer.server.port: "8096"
+      traefik.http.routers.jellyfin.middlewares: "authelia@docker"
+      traefik.enable: "true"
+  tags: jellyfin

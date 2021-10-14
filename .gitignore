@@ -1,0 +1,6 @@
+myansible
+production
+.vault.pass
+staging
+vault.yml
+group_vars/all

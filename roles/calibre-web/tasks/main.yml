@@ -1,0 +1,65 @@
+---
+
+- name: Ensure Calibre-web directory exists
+  file:
+    path: /home/docker/calibre-web
+    state: directory
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+  tags: calibre-web
+
+- name: Ensure Calibre tree directories exists
+  file:
+    path: "{{project_directory}}/calibre-web/{{ item.dir }}"
+    state: directory
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+  loop:
+    - { dir: config }
+  tags: calibre-web
+
+- name: Create Calibre Docker Container
+  community.docker.docker_container:
+    name: calibre-web
+    image: ghcr.io/linuxserver/calibre-web
+    state: started
+    pull: yes
+    hostname: calibre-web
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    # published_ports:
+    #   - 8070:8080 # Calibre desktop gui.
+    #   - 8071:8081 # Calibre webserver gui.
+    volumes:
+      - "{{project_directory}}/calibre-web/config:/config"
+      - /mnt/books:/books
+      - "/etc/localtime:/etc/localtime:ro"
+    env:
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+      DOCKER_MODS: 'linuxserver/calibre-web:calibre' #optional & x86-64 only Adds the ability to perform ebook conversion
+    labels:
+      traefik.http.routers.calibre-web.entrypoints: "websecure"
+      traefik.http.routers.calibre-web.tls: "true"
+      traefik.http.routers.calibre-web.rule: "Host(`calibre-web.{{project_tld}}`)"
+      traefik.http.routers.calibre-web.middlewares: "authelia@docker"
+      traefik.http.routers.calibre-web.service: "calibre-web"
+      traefik.http.routers.calibre-web.tls.certresolver: "dnsChallenge"
+      traefik.http.services.calibre-web.loadbalancer.server.port: "8083"
+      traefik.enable: "true"
+  tags: calibre-web
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+  set_fact:
+   fqdn_services: "{{ fqdn_services + [item] }}"
+  with_items:
+   - "calibre-web.{{project_tld}}"
+  tags: calibre-web

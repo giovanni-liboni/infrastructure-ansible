@@ -1,0 +1,34 @@
+---
+project_tld: '{{vault_project_tld}}'
+domain_tld: '{{vault_domain_tld}}'
+default_timezone: 'Europe/Rome'
+docker_user: "1010"
+docker_group: "1010"
+users_group: "100"
+media_user: '{{docker_user}}'
+media_group: '{{docker_group}}'
+mariadb_host: 'docker.{{project_tld}}'
+mariadb_port: '3306'
+mariadb_root_user: "root"
+mariadb_root_password: "{{vault_mariadb_root_password}}"
+data_directory: "/mnt/data"
+media_directory: "{{data_directory}}"
+project_directory: "/home/docker"
+permanent_cache_directory: "/mnt/data-1"
+photo_directory: "{{permanent_cache_directory}}"
+sonarr_apikey: "{{vault_sonarr_apikey}}"
+radarr_apikey: "{{vault_radarr_apikey}}"
+jackett_apikey: "{{vault_jackett_apikey}}"
+photo_tld: 'photo.{{project_tld}}'
+git_tld: 'git.{{domain_tld}}'
+jellyfin_tld: 'cinema.{{domain_tld}}'
+cups_server_ip: '{{vault_cups_server_ip}}'
+ldap_server_ip: '{{vault_ldap_server_ip}}'
+fqdn_services: []
+vscode_tld: ide.{{project_tld}}
+vscode_volumes:
+  - "{{ project_directory }}:{{ project_directory }}"
+  - "{{ project_directory }}/projects/giovanni.liboni.me:/giovanni.liboni.me"
+ssh_key_public_codeserver: '{{vault_public_ssh_key}}'
+omdb_apikey: '{{vault_omdb_apikey}}'
+theme_park_default: 'space-gray'

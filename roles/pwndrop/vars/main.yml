@@ -1,0 +1,2 @@
+---
+pwndrop_secret_path: "{{vault_pwndrop_secret_path}}"

@@ -1,0 +1,212 @@
+---
+# Homepage configuration
+# See https://fontawesome.com/icons for icons options
+# Optional: Use external configuration file. 
+# Using this will ignore remaining config in this file
+# externalConfig: https://example.com/server-luci/config.yaml
+
+title: "Giovanni Liboni's home"
+subtitle: "Dashboard"
+icon: "fas fa-skull-crossbones"
+footer: false
+header: true
+
+columns: "3" # "auto" or number (must be a factor of 12: 1, 2, 3, 4, 6, 12)
+connectivityCheck: true # whether you want to display a message when the apps are not accessible anymore (VPN disconnected for example)
+
+# Optional theming
+theme: default # 'default' or one of the themes available in 'src/assets/themes'.
+
+links:
+ - name: "Git"
+   icon: "fab fa-git-alt"
+   url: "https://{{git_tld}}/"
+#  - name: "Webmail"
+#    icon: "fas fa-envelope"
+#    url: "https://mail.{{project_tld}}/SOGo/"
+
+# Here is the exhaustive list of customization parameters
+# However all value are optional and will fallback to default if not set.
+# if you want to change only some of the colors, feel free to remove all unused key.
+colors:
+  light:
+    highlight-primary: "#3367d6"
+    highlight-secondary: "#4285f4"
+    highlight-hover: "#5a95f5"
+    background: "#f5f5f5"
+    card-background: "#ffffff"
+    text: "#363636"
+    text-header: "#424242"
+    text-title: "#303030"
+    text-subtitle: "#424242"
+    card-shadow: rgba(0, 0, 0, 0.1)
+    link-hover: "#363636"
+    # background-image: "assets/your/light/bg.png"
+  dark:
+    highlight-primary: "#3367d6"
+    highlight-secondary: "#4285f4"
+    highlight-hover: "#5a95f5"
+    background: "#131313"
+    card-background: "#2b2b2b"
+    text: "#eaeaea"
+    text-header: "#ffffff"
+    text-title: "#fafafa"
+    text-subtitle: "#f5f5f5"
+    card-shadow: rgba(0, 0, 0, 0.4)
+    link-hover: "#ffdd57"
+    # background-image: "assets/your/dark/bg.png"
+
+# Optional message
+# message:
+#   # url: "https://<my-api-endpoint>" # Can fetch information from an endpoint to override value below.
+#   style: "is-warning"
+#   title: "Optional message!"
+#   icon: "fa fa-exclamation-triangle"
+#   content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+
+# Optional navbar
+# links: [] # Allows for navbar (dark mode, layout, and search) without any links
+# links:
+#   - name: "Link 1"
+#     icon: "fab fa-github"
+#     url: "https://github.com/bastienwirtz/homer"
+#     target: "_blank" # optional html tag target attribute
+#   - name: "link 2"
+#     icon: "fas fa-book"
+#     url: "https://github.com/bastienwirtz/homer"
+
+# Services
+# First level array represents a group.
+# Leave only a "items" key if not using group (group name, icon & tagstyle are optional, section separation will not be displayed).
+services:
+  - name: "Media"
+    icon: "fas fa-film"
+    items:
+      - name: "Movies & TV Series"
+        logo: "assets/tools/cinema.png"
+        # Alternatively a fa icon can be provided:
+        # icon: "fab fa-jenkins"
+        subtitle: "Jellyfin"
+        tag: "media"
+        url: "https://{{jellyfin_tld}}/"
+      - name: "Books"
+        # Alternatively a fa icon can be provided:
+        # icon: "fab fa-jenkins"
+        subtitle: "Calibre Server Library"
+        tag: "media"
+        url: "https://calibre.{{project_tld}}/"
+        icon: "fas fa-book"
+      - name: "Books Web Library"
+        # Alternatively a fa icon can be provided:
+        # icon: "fab fa-jenkins"
+        subtitle: "Calibre Web Interface Library"
+        url: "https://calibre-web.{{project_tld}}/"
+        icon: "fas fa-book-reader"
+  - name: "Automation"
+    icon: "fas fa-home"
+    items:
+      - name: "HomeAssistant"
+        url: "https://ha.{{project_tld}}"
+        logo: "assets/tools/homeassistant.svg"
+  - name: "Tools"
+    icon: "fas fa-tools"
+    items:
+      - name: "File Transfer"
+        subtitle: "psitransfer"
+        icon: "fab fa-slideshare"
+        url: "https://file.{{domain_tld}}"
+      - name: "Source Code"
+        subtitle: "Gitea server"
+        icon: "fab fa-git"
+        tag: "code"
+        url: "https://git.{{domain_tld}}"
+      - name: "Code Server"
+        icon: "fas fa-code"
+        tag: "code"
+        subtitle: "on ide.{{project_tld}}"
+        url: "https://ide.{{project_tld}}"
+      - name: "File Sharing"
+        subtitle: "pwndrop service"
+        icon: "fas fa-share-alt-square"
+        url: "https://share.{{domain_tld}}/{{vault_pwndrop_secret_path}}"
+  - name: "Media Management"
+    icon: "fas fa-photo-video"
+    items:
+      - name: "Radarr"
+        subtitle: "Movie Show PVR for Torrent"
+        url: "https://radarr.{{project_tld}}/"
+        logo: "assets/tools/radarr.png"
+      - name: "Sonarr"
+        subtitle: "Tv Show PVR for Torrent"
+        url: "http://sonarr.{{project_tld}}/"
+        logo: "assets/tools/sonarr.svg"
+      - name: "Jackett"
+        subtitle: "API Support for Torrent Trackers"
+        url: "https://jackett.{{project_tld}}/"
+        logo: "assets/tools/jackett.png"
+      - name: "Bazarr"
+        subtitle: "Movies and TV Shows subtitles"
+        url: "https://bazarr.{{project_tld}}/"
+        logo: "assets/tools/bazarr.png"
+      - name: "HandBrake"
+        subtitle: "Movies converter"
+        url: "https://handbrake.{{project_tld}}/"
+        logo: "assets/tools/handbrake.png"
+      - name: "BitTorrent Client"
+        logo: "assets/tools/transmission.svg"
+        # Alternatively a fa icon can be provided:
+        # icon: "fab fa-jenkins"
+        subtitle: "Trasmission"
+        tag: "media"
+        url: "https://transmission.{{project_tld}}/"
+        target: "_blank" # optional html tag target attribute
+      - name: "FileBot"
+        subtitle: "Create a directory with the file inside"
+        url: "https://filebot.{{project_tld}}/"
+        logo: "assets/tools/filebot.svg"
+      - name: "Tdarr"
+        subtitle: "Distributed Transcoding System"
+        logo: "assets/tools/tdarr.gif"
+        url: "https://tdarr.{{project_tld}}/"
+  - name: "Network Tools"
+    icon: "fas fa-heartbeat"
+    items:
+      - name: "Graylog Server"
+        subtitle: "Log server"
+        url: "-"
+        logo: "assets/tools/graylog.png"
+      - name: "Traefik"
+        subtitle: "Routing services"
+        url: "http://api.{{project_tld}}:8080"
+        logo: "assets/tools/traefik.png"  
+  - name: "Network"
+    icon: "fas fa-network-wired"
+    items:
+      - name: "DNS server"
+        subtitle: "Pi-hole"
+        logo: "assets/tools/pi-hole.svg"
+        # subtitle: "Network-wide Ad Blocking" # optional, if no subtitle is defined, PiHole statistics will be shown
+        url: "http://{{vault_pi_hole_server_ip}}/admin"
+        type: "PiHole" # optional, loads a specific component that provides extra features. MUST MATCH a file name (without file extension) available in `src/components/services`
+        target: "_blank" # optional html a tag target attribute
+        tagstyle: "is-danger"
+        # class: "green" # optional custom CSS class for card, useful with custom stylesheet
+        # background: red # optional color for card to set color directly without custom stylesheet
+      - name: "Firewall"
+        subtitle: "Mikrotik"
+        logo: "assets/tools/mikrotik.png"
+        # subtitle: "Network-wide Ad Blocking" # optional, if no subtitle is defined, PiHole statistics will be shown
+        url: "https://192.168.1.100:4443"
+        target: "_blank" # optional html a tag target attribute 
+      - name: "ESXi"
+        subtitle: "WMWare virtualization"
+        url: "https://192.168.1.3"
+        logo: "assets/tools/esxi.png"
+      - name: "Printing Server"
+        icon: "fas fa-print"
+        subtitle: "CUPS instance"
+        url: "https://192.168.1.5:631"
+      - name: "NAS"
+        subtitle: "Synology"
+        logo: "assets/tools/nas.svg"
+        url: "https://{{vault_nfs_server_ip}}"

@@ -1,0 +1,20 @@
+---
+# Setup the iSCSI connection for the specified target host
+# Example:
+#   ansible-playbook setup-new-iscsi.yml --extra-vars "target=imac-2.local" --list-hosts
+- name: Apply iSCSI to the target node(s)
+  hosts: '{{ target }}'
+  become: yes
+  tasks:
+    - name: Perform a discovery on '{{vault_iscsi_target}}' and show available target nodes
+      open_iscsi:
+        show_nodes: yes
+        discover: yes
+        portal: '{{ vault_iscsi_target }}'
+      # NOTE: Only works if exactly one target is exported to the initiator
+    - name: Discover targets on portal and login to the one available
+      open_iscsi:
+        portal: '{{ vault_iscsi_target }}'
+        login: yes
+        discover: yes
+        auto_node_startup: yes

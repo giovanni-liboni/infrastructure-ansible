@@ -1,0 +1,5 @@
+---
+ansible_connection: ansible.netcommon.network_cli
+ansible_network_os: community.network.routeros
+ansible_user: '{{ vault_ansible_user }}'
+fqdn_services: []

@@ -1,0 +1,4 @@
+---
+tdarr_mongodb_username: "tdarr"
+tdarr_mongodb_password: "{{vault_tdarr_mongodb_password}}"
+tdarr_mongodb_database: "Tdarr"

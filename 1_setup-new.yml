@@ -1,0 +1,125 @@
+---
+- name: Apply common configuration to all nodes
+  hosts: all
+  become: yes
+  roles:
+    - common
+    - custom
+    - ansible-ssh-hardening
+  vars:
+    ssh_banner: true
+
+- name: Apply personalization to all nodes
+  hosts: all
+  become: yes
+  roles:
+    - role: gantsign.oh-my-zsh
+      become: yes
+      users:
+        - username: '{{ vault_ansible_user }}'
+
+- name: Install Print server if in printing group
+  hosts: printing
+  become: yes
+  roles:
+    - cups
+  vars:
+    cups_lpadmin_users:
+      - '{{ vault_ansible_user }}'
+      
+- name: Install user 'docker' for 'docker' groups
+  hosts: docker
+  become: yes
+  tasks:
+    - name: Ensure group "docker" exists with correct gid
+      ansible.builtin.group:
+        name: docker
+        state: present
+        gid: "{{docker_group}}"
+    - name: Add the user 'docker' with a specific uid and a primary group of 'docker'
+      ansible.builtin.user:
+        name: docker
+        comment: Docker user
+        uid: '{{docker_user}}'
+        group: docker
+        shell: /usr/sbin/nologin
+        groups: render,docker,users
+        append: yes
+        password: '{{ vault_password_giovanni }}'
+    - name: Add user '{{ vault_ansible_user }}' to 'docker' group
+      ansible.builtin.user:
+        name: '{{ vault_ansible_user }}'
+        groups: docker
+        append: yes
+        
+- name: Mount the network data for docker
+  hosts: docker
+  become: yes
+  tasks:
+    - name: Ensure data directory exists
+      file:
+        path: /mnt/data
+        state: directory
+        owner: '{{docker_user}}'
+        group: "{{users_group}}"
+        mode: g+rwx
+    - name: Mount up data device by UUID
+      ansible.posix.mount:
+        path: /mnt/data
+        src: UUID=8fa04e3d-2b67-4abf-b0d7-142ebf3ee140
+        fstype: ext4
+        opts: nofail,defaults,rw
+        state: present
+    - name: Ensure docker directory exists
+      file:
+        path: /mnt/docker
+        state: directory
+    - name: Mount up data device by UUID
+      ansible.posix.mount:
+        path: /mnt/docker
+        src: UUID=f6f96590-9da3-4d7b-82cf-b84d0d8a6ba9
+        fstype: ext4
+        opts: nofail,_netdev,defaults,rw
+        state: present
+    - name: Ensure data-1 directory exists
+      file:
+        path: /mnt/data-1
+        state: directory
+        owner: '{{docker_user}}'
+        group: "{{users_group}}"
+        mode: g+rwx
+    - name: Mount up data-1 device by UUID
+      ansible.posix.mount:
+        path: /mnt/data-1
+        src: UUID=617376ee-dc97-4f9e-97ac-7489a285fd10
+        fstype: ext4
+        opts: nofail,_netdev,defaults,rw
+        state: present
+
+# For each new host, you MUST run restic init --repo /mnt/backup/servers/{{fqdn}} BEFORE running the task
+- name: Setup shared directories for local servers
+  hosts: local
+  become: yes
+  roles:
+    - local-srv
+  vars:
+    idmapd_domain: '{{domain_tld}}'
+
+- name: Remove the user 'ubuntu'
+  hosts: all
+  become: yes
+  tasks:
+    - debug:
+        msg: |
+          ansible_user: {{ ansible_user | d('unset') }};
+          remote_user: {{ remote_user | d('unset') }}
+    - name: Change remote user
+      set_fact:
+        current_user: '{{ vault_ansible_user }}'
+        ansible_user: '{{ vault_ansible_user }}'
+        remote_user: '{{ vault_ansible_user }}'
+    - name: Remove the user 'ubuntu'
+      user:
+        name: ubuntu
+        state: absent
+        remove: yes

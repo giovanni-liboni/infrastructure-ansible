@@ -1,0 +1,98 @@
+---
+# Github: https://github.com/haugene/docker-transmission-openvpn
+- name: Ensure Transmission data directory exists
+  file:
+    path: "{{permanent_cache_directory}}/torrent"
+    state: directory
+  tags: transmission
+
+- name: Ensure Transmission config directory exists
+  file:
+    path: "{{project_directory}}/transmission/config"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: transmission
+
+- name: Ensure Transmission tree directories exists
+  file:
+    path: "{{permanent_cache_directory}}/torrent/{{ item.dir }}"
+    state: directory
+  loop:
+    - { dir: completed }
+    - { dir: incomplete }
+  tags: transmission
+
+# Check if it exists
+# If not, then check if a backup exists
+# If yes, restore the backup
+
+- name: Start Transmission
+  community.docker.docker_container:
+    name: transmission
+    hostname: transmission
+    pull: yes
+    image: "haugene/transmission-openvpn:{{transmission_version}}"
+    state: started
+    groups:
+      - netdev
+    restart_policy: unless-stopped
+    network_mode: default
+    networks_cli_compatible: yes
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    devices:
+      - "/dev/net/tun"
+    capabilities:
+      - "NET_ADMIN"
+      - "NET_RAW"
+      - "CHOWN"
+      - "MKNOD"
+      - "SETGID"
+      - "SYS_CHROOT"
+      - "SETPCAP"
+      - "SETUID"
+      - "SETFCAP"
+      - "NET_BIND_SERVICE"
+      - "KILL"
+      - "FSETID"
+      - "DAC_OVERRIDE"
+      - "AUDIT_WRITE"
+      - "FOWNER"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - "{{permanent_cache_directory}}/torrent:/data:rw"
+      - "{{project_directory}}/transmission/config:/config:rw"
+    labels:
+      traefik.http.routers.transmission.entrypoints: "websecure"
+      traefik.http.routers.transmission.tls: "true"
+      traefik.http.routers.transmission.rule: "Host(`transmission.{{project_tld}}`)"
+      traefik.http.routers.transmission.middlewares: "authelia@docker"
+      traefik.http.routers.transmission.service: "transmission"
+      traefik.http.routers.transmission.tls.certresolver: "dnsChallenge"
+      traefik.http.services.transmission.loadbalancer.server.port: "9091"
+      traefik.enable: "true"
+    env:
+      OPENVPN_PROVIDER: '{{ vault_openvpn_provider }}'
+      OPENVPN_USERNAME: '{{ vault_openvpn_username }}'
+      OPENVPN_PASSWORD: '{{ vault_openvpn_password }}'
+      OPENVPN_CONFIG: '{{ vault_openvpn_config }}'
+      LOCAL_NETWORK: "192.168.0.0/16"
+      TRANSMISSION_RPC_USERNAME: "torrent"
+      TRANSMISSION_RPC_PASSWORD: "torrent"
+      TRANSMISSION_RPC_AUTHENTICATION_REQUIRED: 'true'
+      TRANSMISSION_IDLE_SEEDING_LIMIT: "1"
+      TRANSMISSION_IDLE_SEEDING_LIMIT_ENABLED: "true"
+      TRANSMISSION_RATIO_LIMIT: "0"
+      TRANSMISSION_RATIO_LIMIT_ENABLED: "true"
+      TRANSMISSION_DOWNLOAD_QUEUE_SIZE: "10"
+      TRANSMISSION_PEER_LIMIT_GLOBAL: "300"
+      TRANSMISSION_MAX_PEERS_GLOBAL: "300"
+      TRANSMISSION_PEER_LIMIT_PER_TORRENT: "75"
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+  tags: transmission

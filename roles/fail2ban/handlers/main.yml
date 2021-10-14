@@ -1,0 +1,7 @@
+---
+- name: Restart fail2ban
+  community.general.docker_container:
+    name: fail2ban
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart fail2ban

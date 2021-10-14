@@ -1,0 +1,55 @@
+---
+# https://github.com/psi-4ward/psitransfer
+# Alternative: https://github.com/andreimarcu/linx-server
+# Alernative 2: https://github.com/WeebDev/chibisafe
+- name: Ensure psitransfer data directory exists
+  file:
+    path: "{{project_directory}}/psitransfer/data"
+    state: directory
+    owner: "1000"
+    group: "{{users_group}}"
+
+- name: Ensure psitransfer data upload directory exists
+  file:
+    path: "{{permanent_cache_directory}}/psitransfer/upload"
+    state: directory
+    owner: "1000"
+    group: "{{users_group}}"
+    mode: g+w
+ 
+- name: Start psitransfer
+  community.docker.docker_container:
+    name: psitransfer
+    image: psitrax/psitransfer
+    state: started
+    pull: yes
+    hostname: psitransfer
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    volumes:
+      - "{{project_directory}}/psitransfer/data:/data:rw"
+      - "{{permanent_cache_directory}}/psitransfer/upload:/upload:rw"
+      - "/etc/localtime:/etc/localtime:ro"
+    env:
+      PSITRANSFER_ADMIN_PASS: '{{ vault_psitransfer_admin_pass }}'
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      PSITRANSFER_UPLOAD_DIR: "/upload"
+      PSITRANSFER_UPLOAD_PASS: "{{ vault_psitransfer_admin_pass }}"
+    labels:
+      traefik.http.routers.psitransfer.entrypoints: "websecure"
+      traefik.http.routers.psitransfer.tls: "true"
+      traefik.http.routers.psitransfer.rule: "Host(`file.{{domain_tld}}`)"
+      traefik.http.routers.psitransfer.middlewares: "authelia@docker"
+      traefik.http.routers.psitransfer.service: "psitransfer"
+      traefik.http.routers.psitransfer.tls.certresolver: "dnsChallenge"
+      traefik.http.services.psitransfer.loadbalancer.server.port: "3000"
+      traefik.enable: "true"

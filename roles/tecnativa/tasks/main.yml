@@ -1,0 +1,25 @@
+---
+- name: Ensure the network exists
+  community.docker.docker_network:
+    name: proxy
+
+- name: Create Tecnativa Docker Container
+  community.general.docker_container:
+    name: tecnativa
+    image: "tecnativa/docker-socket-proxy:{{tecnativa_version}}"
+    pull: yes
+    hostname: tecnativa
+    restart_policy: unless-stopped
+    privileged: yes
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      CONTAINERS: "1"
+      NETWORKS: "1"
+      INFO: "1"
+      SERVICES: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  tags: tecnativa

@@ -1,0 +1,54 @@
+---
+- name: Ensure Sonarr Directory Exist
+  file:
+    path: "{{project_directory}}/sonarr"
+    state: directory
+  tags: sonarr
+
+- name: Ensure Sonarr Configuration Files Exist
+  template:
+    src: config.xml.j2
+    dest: "{{project_directory}}/sonarr/config.xml"
+  tags: sonarr
+  no_log: true
+  notify: restart sonarr
+
+- name: Create Sonarr Docker Container
+  community.general.docker_container:
+    name: sonarr
+    image: "linuxserver/sonarr:{{sonarr_version}}"
+    pull: yes
+    hostname: sonarr
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    links:
+      - jackett:jackett
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      DOCKER_MODS: "gilbn/theme.park:sonarr"
+      TP_THEME: "{{theme_park_default}}"
+    volumes:
+      - "{{project_directory}}/sonarr:/config"
+      - "{{data_directory}}/tv:/tv"
+      - "{{permanent_cache_directory}}/torrent/completed:/data/completed"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.sonarr.entrypoints: "websecure"
+      traefik.http.routers.sonarr.tls: "true"
+      traefik.http.routers.sonarr.rule: "Host(`sonarr.{{project_tld}}`)"
+      traefik.http.routers.sonarr.middlewares: "authelia@docker"
+      traefik.http.routers.sonarr.service: "sonarr"
+      traefik.http.routers.sonarr.tls.certresolver: "dnsChallenge"
+      traefik.http.services.sonarr.loadbalancer.server.port: "8989"
+      traefik.enable: "true"
+  tags: sonarr

@@ -1,0 +1,7 @@
+---
+# https://yetiops.net/posts/ansible-for-networking-part-6-mikrotik-routeros/
+# https://docs.ansible.com/ansible/latest/network/user_guide/platform_routeros.html
+#https://docs.ansible.com/ansible/latest/collections/community/routeros/command_module.html#ansible-collections-community-routeros-command-module
+- name: Add a CNAME entry with the specified name and cname
+  community.routeros.command:
+    commands: /ip dns static add name={{dns_name}} type=CNAME cname={{dns_cname}}

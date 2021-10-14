@@ -1,0 +1,28 @@
+---
+- name: Create or update all the docker services
+  hosts: docker
+  become: yes
+  roles:
+    - tecnativa
+    - traefik
+    - redis
+    - mariadb
+    - authelia
+    - homer
+    - vscode
+    # - filebot
+    # - addarr
+    - proxy
+    - syncthing
+    - bitwarden
+    - fail2ban
+    - psitransfer
+    - pwndrop
+    - jackett
+    - transmission
+    - radarr
+    - sonarr
+    - jellyfin
+    - bazarr
+    - calibre-web
+    - calibre

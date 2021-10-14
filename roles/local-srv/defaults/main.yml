@@ -1,0 +1,5 @@
+---
+# defaults file for common
+
+# defaults file for ansible-role-idmapd
+idmapd_enabled: False

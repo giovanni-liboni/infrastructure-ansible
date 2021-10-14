@@ -1,0 +1,55 @@
+---
+api:
+  dashboard: true
+  debug: true
+  insecure: true
+
+serversTransport:
+  insecureSkipVerify: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+  ldap:
+    address: ":389"
+  ldaps:
+    address: ":636"
+#  bittorrent:
+#    address: ":6881/udp"
+
+providers:
+  docker:
+    endpoint: "tcp://tecnativa:2375"
+    exposedByDefault: false
+    watch: true
+    network: proxy
+  file:
+    filename: /config.yml
+    watch: true
+
+certificatesResolvers:
+  dnsChallenge:
+    acme:
+      email: "{{acme_user_email}}"
+      storage: acme.json
+      dnsChallenge:
+        provider: cloudflare
+        disablePropagationCheck: true
+        delayBeforeCheck: 0
+
+pilot:
+  token: "{{traefik_pilot_token}}"
+
+experimental:
+  plugins:
+    rewritebody:
+      modulename: "github.com/traefik/plugin-rewritebody"
+      version: "v0.3.1"
+
+log:
+  level: TRACE
+
+global:
+  checkNewVersion: true

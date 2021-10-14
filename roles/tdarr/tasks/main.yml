@@ -1,0 +1,88 @@
+---
+- name: Ensure transcode directory Exists
+  file:
+    path: "{{permanent_cache_directory}}/tdarr/transcode"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+
+
+- name: Create Tdarr Server Docker Container
+  community.general.docker_container:
+    name: tdarr
+    image: "haveagitgat/tdarr:{{tdarr_version}}"
+    pull: yes
+    user: root
+    hostname: tdarr
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    published_ports:
+      - 8266:8266
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      webUIPort: "8265"
+      serverPort: "8266"
+      serverIP: "0.0.0.0"
+    volumes:
+      - "{{project_directory}}/tdarr/server:/app/server"
+      - "{{project_directory}}/tdarr/configs:/app/configs"
+      - "{{project_directory}}/tdarr/logs:/logs"
+      # - "{{project_directory}}/tdarr/data:/var/lib/mongodb"
+      - "{{data_directory}}:/media"
+      - "{{permanent_cache_directory}}/tdarr/transcode:/temp"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.tdarr.entrypoints: "websecure"
+      traefik.http.routers.tdarr.tls: "true"
+      traefik.http.routers.tdarr.rule: "Host(`tdarr.{{project_tld}}`)"
+      traefik.http.routers.tdarr.middlewares: "authelia@docker"
+      traefik.http.routers.tdarr.service: "tdarr"
+      traefik.http.services.tdarr.loadbalancer.server.port: "8265"
+      traefik.enable: "true"
+  tags: tdarr
+
+- name: Create Tdarr Node Docker Container
+  community.general.docker_container:
+    name: tdarrnode
+    image: "haveagitgat/tdarr_node:{{tdarr_version}}"
+    pull: yes
+    user: root
+    hostname: tdarrnode
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    groups:
+      - 109
+    devices:
+      - "/dev/dri/renderD129:/dev/dri/renderD128"
+      - "/dev/dri/card1:/dev/dri/card0"
+    published_ports:
+      - 8267:8267
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      nodeID: "mainNode"
+      serverPort: "8266"
+      serverIP: "tdarr"
+      nodePort: "8267"
+      nodeIP: "tdarrnode"
+    volumes:
+      - "{{project_directory}}/tdarr/configs:/app/configs"
+      - "{{project_directory}}/tdarr/logs:/logs"
+      # - "{{project_directory}}/tdarr/data:/var/lib/mongodb"
+      - "{{data_directory}}:/media"
+      - "{{permanent_cache_directory}}/tdarr/transcode:/temp"
+      - /etc/localtime:/etc/localtime:ro
+  tags: tdarr

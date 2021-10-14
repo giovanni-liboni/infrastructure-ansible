@@ -1,0 +1,7 @@
+---
+- name: Restart Calibre
+  community.general.docker_container:
+    name: calibre
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart calibre

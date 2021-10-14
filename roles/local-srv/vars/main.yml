@@ -1,0 +1,18 @@
+---
+# vars file for common
+restic_password: "{{vault_restic_password}}"
+restic_password_file: "/etc/restic_password_file"
+restic_create_cron: true
+restic_repos:
+  local: # Do non change this name, it is used by the task to perform existing check
+    location: "/mnt/backup/servers/{{ ansible_fqdn }}"
+    password: "{{restic_password_file}}"
+    init: true
+restic_backups:
+  home-local:
+    name: homes-local
+    repo: local
+    src: /home
+    scheduled: true
+    schedule_hour: 3
+    keep_daily: 7

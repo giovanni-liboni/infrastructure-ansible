@@ -1,0 +1,17 @@
+---
+ldap_server_ip: "{{vault_ldap_server_ip}}"
+ldap_admin_password: "{{vault_ldap_admin_password}}"
+base_dn: "{{vault_base_dn}}"
+smtp_password: "{{vault_smtp_password}}"
+smtp_user: "{{vault_smtp_user}}"
+smtp_server: "{{vault_smtp_server}}"
+smtp_sender: "{{vault_smtp_sender}}"
+authelia_db_username: "authelia"
+authelia_db_password: "{{vault_authelia_db_password}}"
+authelia_session_secret: "{{vault_authelia_session_secret}}"
+domain_tld: '{{vault_domain_tld}}'
+project_tld: '{{vault_project_tld}}'
+user_display_name: "{{vault_authelia_user_display_name}}"
+user_password: "{{vault_authelia_user_password}}"
+user_email: "{{vault_ansible_user_email}}"
+user_name: "{{vault_ansible_user}}"

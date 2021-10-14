@@ -1,0 +1,42 @@
+---
+
+- name: Ensure Tinymediamanager config directory exists
+  file:
+    path: "{{project_directory}}/tinymediamanager/config"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: tinymediamanager
+  
+- name: Start Tinymediamanager
+  community.docker.docker_container:
+    name: tinymediamanager
+    hostname: tinymediamanager
+    pull: yes
+    image: romancin/tinymediamanager:latest-v4
+    state: started
+    restart_policy: unless-stopped
+    network_mode: default
+    networks_cli_compatible: yes
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    volumes:
+      - "{{permanent_cache_directory}}/handbrake_output:/data:rw"
+      - "{{project_directory}}/tinymediamanager/config:/config:rw"
+    labels:
+      traefik.http.routers.tinymediamanager.entrypoints: "websecure"
+      traefik.http.routers.tinymediamanager.tls: "true"
+      traefik.http.routers.tinymediamanager.rule: "Host(`tinymediamanager.{{project_tld}}`)"
+      traefik.http.routers.tinymediamanager.middlewares: "authelia@docker"
+      traefik.http.routers.tinymediamanager.service: "tinymediamanager"
+      traefik.http.routers.tinymediamanager.tls.certresolver: "dnsChallenge"
+      traefik.http.services.tinymediamanager.loadbalancer.server.port: "5800"
+      traefik.enable: "true"
+    env:
+      USER_ID: '{{docker_user}}'
+      GROUP_ID: '{{users_group}}'
+      TZ: Europe/Paris
+  tags: tinymediamanager

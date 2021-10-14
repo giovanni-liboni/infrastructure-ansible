@@ -1,0 +1,7 @@
+---
+bitwarden_log_file: "/bitwarden/bitwarden.log"
+smtp_password: "{{vault_smtp_password}}"
+smtp_user: "{{vault_smtp_user}}"
+smtp_server: "{{vault_smtp_server}}"
+smtp_sender: "{{vault_smtp_sender}}"
+smtp_port: "587"

@@ -1,0 +1,56 @@
+---
+# Authentication in confix.xml
+# Change AuthenticationMethod from none to Forms
+# To disable auth, set it to none
+- name: Ensure Radarr Directory Exist
+  file:
+    path: "{{project_directory}}/radarr"
+    state: directory
+  tags: radarr
+
+- name: Ensure Radarr Configuration Files Exist
+  template:
+    src: "config.xml.j2"
+    dest: "{{project_directory}}/radarr/config.xml"
+  tags: radarr
+  no_log: true
+  notify: restart radarr
+
+- name: Create Radarr Docker Container
+  community.general.docker_container:
+    name: radarr
+    image: "linuxserver/radarr:{{radarr_version}}"
+    pull: yes
+    hostname: radarr
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      DOCKER_MODS: "gilbn/theme.park:radarr"
+      TP_THEME: "{{theme_park_default}}"
+    volumes:
+      - "{{project_directory}}/radarr:/config"
+      - "{{data_directory}}/movies:/movies"
+      - "{{data_directory}}/kids:/kids"
+      - "{{permanent_cache_directory}}/torrent/completed:/data/completed"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.radarr.entrypoints: "websecure"
+      traefik.http.routers.radarr.tls: "true"
+      traefik.http.routers.radarr.rule: "Host(`radarr.{{project_tld}}`)"
+      traefik.http.routers.radarr.middlewares: "authelia@docker"
+      traefik.http.routers.radarr.service: "radarr"
+      traefik.http.services.radarr.loadbalancer.server.port: "7878"
+      traefik.http.routers.radarr.tls.certresolver: "dnsChallenge"
+      traefik.enable: "true"
+  tags: radarr

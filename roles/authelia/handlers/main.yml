@@ -1,0 +1,7 @@
+---
+- name: Restart Authelia
+  community.general.docker_container:
+    name: authelia
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart authelia

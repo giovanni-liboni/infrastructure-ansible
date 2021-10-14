@@ -1,0 +1,95 @@
+---
+- name: Ensure fail2ban tree directories exists
+  file:
+    path: "{{project_directory}}/fail2ban/{{ item }}"
+    state: directory
+  loop:
+    - "action.d"
+    - "jail.d"
+    - "filter.d"
+  tags: fail2ban
+
+- name: Copy iptables-common.local
+  copy:
+    dest: "{{project_directory}}/fail2ban/action.d/iptables-common.local"
+    content: >-
+      [Init]
+      blocktype = DROP
+      [Init?family=inet6]
+      blocktype = DROP
+  tags: fail2ban
+
+- name: Ensure fail2ban Filters Exist
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+  with_items:
+    - {src: filter_bitwarden_rs.local.j2,dest: "{{project_directory}}/fail2ban/filter.d/bitwarden_rs.local"}
+    - {src: filter_bitwarden_rs-admin.local.j2,dest: "{{project_directory}}/fail2ban/filter.d/bitwarden_rs-admin.local"}
+    - {src: filter_authelia.local.j2,dest: "{{project_directory}}/fail2ban/filter.d/authelia.local"}
+  tags: fail2ban
+  no_log: false
+  notify: restart fail2ban
+
+- name: Ensure fail2ban Jails Exist
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+  with_items:
+    - {src: jail_bitwarden_rs.local.j2,dest: "{{project_directory}}/fail2ban/jail.d/bitwarden_rs.local"}
+    - {src: jail_bitwarden_rs-admin.local.j2,dest: "{{project_directory}}/fail2ban/jail.d/bitwarden_rs-admin.local"}
+    - {src: jail_authelia.local.j2,dest: "{{project_directory}}/fail2ban/jail.d/authelia.local"}
+  tags: fail2ban
+  no_log: false
+  notify: restart fail2ban
+
+- name: Start fail2ban
+  community.docker.docker_container:
+    name: fail2ban
+    image: crazymax/fail2ban:latest
+    hostname: fail2ban
+    pull: yes
+    container_default_behavior: compatibility
+    network_mode: host
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks_cli_compatible: yes
+    state: started
+    groups:
+      - netdev
+    capabilities:
+      - "NET_ADMIN"
+      - "NET_RAW"
+      - "CHOWN"
+      - "MKNOD"
+      - "SETGID"
+      - "SYS_CHROOT"
+      - "SETPCAP"
+      - "SETUID"
+      - "SETFCAP"
+      - "NET_BIND_SERVICE"
+      - "KILL"
+      - "FSETID"
+      - "DAC_OVERRIDE"
+      - "AUDIT_WRITE"
+      - "FOWNER"
+    volumes:
+      - "{{project_directory}}/fail2ban:/data:rw"
+      - "{{project_directory}}/bitwarden/bitwarden.log:/bitwarden/bitwarden.log:rw"
+      - "{{project_directory}}/authelia/authelia.log:/authelia/authelia.log:rw"
+      - "/etc/localtime:/etc/localtime:ro"
+    env:
+      TZ: "{{default_timezone}}"
+      F2B_DB_PURGE_AGE: "30d"
+      F2B_LOG_TARGET: "/data/fail2ban.log"
+      F2B_LOG_LEVEL: "INFO"
+      F2B_IPTABLES_CHAIN: "INPUT"
+      SSMTP_HOST: "{{smtp_server}}"
+      SSMTP_PORT: "{{smtp_port}}"
+      SSMTP_USER: "{{smtp_user}}"
+      SSMTP_PASSWORD: "{{smtp_password}}"
+      SSMTP_TLS: "YES"
+      SSMTP_STARTTLS: "YES"
+  tags: fail2ban

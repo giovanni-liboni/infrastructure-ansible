@@ -1,0 +1,9 @@
+---
+# Default theme
+oh_my_zsh_theme: robbyrussell
+
+# Default plugins
+oh_my_zsh_plugins:
+  - git
+
+oh_my_zsh_install: yes

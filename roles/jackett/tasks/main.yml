@@ -1,0 +1,79 @@
+---
+- name: Ensure Jackett Directory Exist
+  file:
+    path: "{{project_directory}}/jackett/Jackett"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: jackett
+
+- name: Ensure Jackett Configuration Files Exist
+  template:
+    src: ServerConfig.json.j2
+    dest: "{{project_directory}}/jackett/Jackett/ServerConfig.json"
+  notify: restart jackett
+  no_log: false
+  tags: jackett
+
+- name: Create Jackett Docker Container
+  community.general.docker_container:
+    name: jackett
+    image: "linuxserver/jackett:{{jackett_version}}"
+    pull: yes
+    hostname: jackett
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      AUTO_UPDATE: 'true'
+    volumes:
+      - "{{project_directory}}/jackett:/config"
+      - "{{permanent_cache_directory}}/torrent/completed:/data/completed"
+    labels:
+      traefik.http.routers.jackett.entrypoints: "websecure"
+      traefik.http.routers.jackett.tls: "true"
+      traefik.http.routers.jackett.rule: "Host(`jackett.{{project_tld}}`)"
+      traefik.http.middlewares.jackett_rewrite_theme.plugin.rewritebody.rewrites.regex: "</head>"
+      traefik.http.middlewares.jackett_rewrite_theme.plugin.rewritebody.rewrites.replacement: "<link rel: stylesheet type: text/css href: https://gilbn.github.io/theme.park/CSS/themes/jackett/{{theme_park_default}}.css></head>"
+      traefik.http.routers.jackett.middlewares: "authelia@docker,jackett_rewrite_theme"
+      traefik.http.routers.jackett.service: "jackett"
+      traefik.http.routers.jackett.tls.certresolver: "dnsChallenge"
+      traefik.http.services.jackett.loadbalancer.server.port: "9117"
+      traefik.enable: "true"
+  tags: jackett
+
+- name: Create Flair Resolverr Docker Container
+  community.general.docker_container:
+    name: flaresolverr
+    image: "ghcr.io/flaresolverr/flaresolverr:{{flaresolverr_version}}"
+    pull: yes
+    hostname: flaresolverr
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    memory: 512M
+    memory_swap: 512M
+    env:
+      LOG_LEVEL: "info"
+      LOG_HTML: "false"
+      CAPTCHA_SOLVER: "none"
+      HEADLESS: "true"
+      PORT: "8191"
+  tags: jackett

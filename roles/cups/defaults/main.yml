@@ -1,0 +1,3 @@
+---
+# defaults file for common
+cups_cupsd_conf_template: "files/cupsd.conf"

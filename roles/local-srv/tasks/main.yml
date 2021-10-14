@@ -1,0 +1,93 @@
+---
+- name: Install defaults packages
+  package:
+    name:
+      - nfs-common
+      - restic
+    state: present
+  tags: local-srv
+
+- name: idmapd confing
+  template: src=idmapd.conf.j2 dest=/etc/idmapd.conf owner=root group=root mode=0644
+  tags: local-srv
+
+- name: Ensure backup directory exists
+  file:
+    path: /mnt/backup
+    state: directory
+  tags: local-srv
+
+- name: Mount the backup NFS volume
+  ansible.posix.mount:
+    src: '{{vault_nfs_server_ip}}:/volume1/backup'
+    path: /mnt/backup
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs
+  tags: local-srv
+
+- name: Ensure photo directory exists
+  file:
+    path: /mnt/photo
+    state: directory
+  tags: local-srv
+
+- name: Mount the backup NFS volume
+  ansible.posix.mount:
+    src: '{{vault_nfs_server_ip}}:/volume1/photo'
+    path: /mnt/photo
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs
+  tags: local-srv
+
+- name: Ensure books directory exists
+  file:
+    path: /mnt/books
+    state: directory
+  tags: local-srv
+
+- name: Mount the books NFS volume
+  ansible.posix.mount:
+    src: '{{vault_nfs_server_ip}}:/volume1/books'
+    path: /mnt/books
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs
+  tags: local-srv
+
+- name: Set the Restic passoword file
+  copy:
+    content: "{{restic_password}}"
+    dest: "/etc/restic_password_file"
+    mode: u=rw
+  tags: local-srv
+
+- name: Check if the local backup directory exists
+  stat:
+    path: "{{restic_repos.local.location}}"
+  register: local_backup_details
+  tags: local-srv
+
+- name: Set the restic associated init variable for local repository
+  set_fact:
+    restic_repos: "{{restic_repos|combine({'local' : {'init' : false }}, recursive=True)}}"
+  when: local_backup_details.stat.exists and local_backup_details.stat.isdir
+  tags: local-srv
+
+- name: Set the restic associated init variable for remote repository
+  set_fact:
+    restic_repos: "{{restic_repos|combine({'remote' : {'init' : false }}, recursive=True)}}"
+  when: local_backup_details.stat.exists and local_backup_details.stat.isdir
+  tags: local-srv
+
+- name: Debug
+  debug:
+    var: restic_repos.local.init
+  tags: local-srv
+
+# https://github.com/arillso/ansible.restic
+- name: Configure backup with Restic
+  include_role:
+    name: arillso.restic
+  tags: local-srv

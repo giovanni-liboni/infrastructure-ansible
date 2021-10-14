@@ -1,0 +1,7 @@
+---
+- name: Restart Radarr
+  community.general.docker_container:
+    name: radarr
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart radarr

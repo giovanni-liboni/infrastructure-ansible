@@ -1,0 +1,7 @@
+---
+- name: Restart lychee
+  community.general.docker_container:
+    name: lychee
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart lychee

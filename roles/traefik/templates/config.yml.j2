@@ -1,0 +1,55 @@
+http:
+  middlewares:
+    cups-auth:
+      basicAuth:
+        users:
+          - ""
+    homeassistant-ratelimit:
+      rateLimit:
+        average: 30
+        burst: 45
+  routers:
+    cups:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`print.{{project_tld}}`)"
+      tls: {}
+      middlewares:
+        - cups-auth
+      service: "cups"
+    homeassistant-rtr:
+      entryPoints:
+        - "websecure"
+      tls: {}
+      middlewares:
+        - homeassistant-ratelimit
+      rule: "Host(`ha.{{domain_tld}}`)"
+      service: "homeassistant"
+  services:
+    cups:
+      loadBalancer:
+        servers:
+          - url: "{{cups_server_ip}}"
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "https://ha.{{project_tld}}/"
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict : true
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+
+tcp:
+  services:
+    ldap1-service:
+      loadBalancer:
+        servers:
+        - address: "{{ldap_server_ip}}:389"

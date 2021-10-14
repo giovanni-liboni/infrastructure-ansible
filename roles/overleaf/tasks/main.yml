@@ -1,0 +1,62 @@
+---
+# Github: https://github.com/overleaf/overleaf/wiki/Quick-Start-Guide
+- name: Ensure Overleaf data directory exists
+  file:
+    path: "{{permanent_cache_directory}}/overleaf"
+    state: directory
+  tags: overleaf
+
+- name: Ensure overleaf config directory exists
+  file:
+    path: "{{project_directory}}/overleaf/config"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: overleaf
+
+# Check if it exists
+# If not, then check if a backup exists
+# If yes, restore the backup
+
+- name: Start Transmission
+  community.docker.docker_container:
+    name: overleaf
+    hostname: overleaf
+    pull: yes
+    image: sharelatex/sharelatex:with-texlive-full
+    state: stopped
+    groups:
+      - netdev
+    restart_policy: unless-stopped
+    network_mode: default
+    networks_cli_compatible: yes
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - "{{permanent_cache_directory}}/overleaf:/data:rw"
+      - "{{project_directory}}/overleaf/config:/config:rw"
+    labels:
+      traefik.http.routers.overleaf.entrypoints: "websecure"
+      traefik.http.routers.overleaf.tls: "true"
+      traefik.http.routers.overleaf.rule: "Host(`overleaf.{{project_tld}}`)"
+      traefik.http.routers.overleaf.middlewares: "authelia@docker"
+      traefik.http.routers.overleaf.service: "overleaf"
+      traefik.http.routers.overleaf.tls.certresolver: "dnsChallenge"
+      traefik.http.services.overleaf.loadbalancer.server.port: "80"
+      traefik.enable: "true"
+    env:
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+  tags: overleaf
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+set_fact:
+ fqdn_services: "{{ fqdn_services + [item] }}"
+with_items:
+ - "overleaf.{{project_tld}}"
+tags: overleaf

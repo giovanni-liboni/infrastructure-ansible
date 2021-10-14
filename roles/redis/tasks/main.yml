@@ -1,0 +1,25 @@
+---
+- name: Ensure Redis Directory Exist
+  file:
+    path: "{{ project_directory }}/redis"
+    state: directory
+  tags: redis
+
+- name: Create Redis Docker Container
+  community.general.docker_container:
+    name: redis
+    image: "redis:{{redis_version}}"
+    pull: yes
+    hostname: redis
+    container_default_behavior: compatibility
+    network_mode: default
+    comparisons:
+      '*': strict
+    restart_policy: unless-stopped
+    networks_cli_compatible: yes
+    networks:
+      - name: proxy
+    state: started
+    volumes:
+      - "{{project_directory}}/redis:/data"
+  tags: redis

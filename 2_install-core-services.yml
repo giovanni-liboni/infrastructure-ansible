@@ -1,0 +1,40 @@
+---
+- name: Install required packages
+  hosts: docker
+  become: yes
+  tasks:
+    - name: Install required packages
+      package:
+        name:
+          - python3
+          - python3-pip
+          - python3-docker
+          - python3-setuptools
+        state: present
+
+- name: Deploy core services
+  hosts: docker
+  become: yes 
+  roles:
+    - tecnativa
+    - traefik
+    - redis
+    - mariadb
+    - authelia
+    - homer
+    - vscode
+    - proxy
+    - syncthing
+    - bitwarden
+    - fail2ban
+    - psitransfer
+    - pwndrop
+
+- name: Register DNS names in Mikrotik
+  hosts: routeros
+  tasks:
+    - include_tasks: roles/mikrotik/tasks/add-dns-cname-entry.yml
+      vars:
+        dns_name: "{{fqdn_service}}"
+        dns_cname: "{{vault_docker_host}}"
+      loop: "{{ fqdn_services|flatten(levels=1) }}"

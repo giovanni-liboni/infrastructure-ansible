@@ -1,0 +1,8 @@
+---
+manala_vim_config:
+  syntax: "on"
+  encoding: utf8
+  expandtab: true  # Use spaces instead of tabs
+  smarttab: true   # Be smart when using tabs ;)
+  shiftwidth: 2    # 1 tab == 4 spaces
+  tabstop: 2

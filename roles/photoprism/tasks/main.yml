@@ -1,0 +1,94 @@
+---
+- name: Ensure Photoprism Directories Exist
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  loop:
+    - "{{photo_directory}}/photoprism/data/config/photoprism"
+    - "{{photo_directory}}/photoprism/originals"
+    - "{{photo_directory}}/photoprism/import"
+    - "{{photo_directory}}/photoprism/data"
+  tags: photoprism
+
+- import_tasks: roles/mariadb/tasks/database_manager.yml
+  vars:
+    database_name: "{{photoprism_database}}"
+    database_user: "{{photoprism_database_user}}"
+    database_password: "{{photoprism_database_password}}"
+  tags: photoprism
+
+- name: Create Photoprism Docker Container
+  community.general.docker_container:
+    name: photoprism
+    image: "photoprism/photoprism:{{photoprism_version}}"
+    pull: yes
+    hostname: photoprism
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    # env_file: "{{photo_directory}}/photoprism/data/config/photoprism/photoprism.env"
+    security_opts:
+      - "seccomp=unconfined"
+      - "apparmor=unconfined"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{photo_directory}}/photoprism/originals:/photoprism/originals"
+      - "{{photo_directory}}/photoprism/import:/photoprism/import"
+      - "{{photo_directory}}/photoprism/data:/photoprism/storage"
+    env:
+      PHOTOPRISM_ADMIN_PASSWORD: "{{photoprism_admin_password}}"          # PLEASE CHANGE: Your initial admin password (min 4 characters)
+      PHOTOPRISM_HTTP_PORT: "2342"                     # Built-in Web server port
+      PHOTOPRISM_HTTP_COMPRESSION: "gzip"            # Improves transfer speed and bandwidth utilization (none or gzip)
+      PHOTOPRISM_DEBUG: "false"                      # Run in debug mode (shows additional log messages)
+      PHOTOPRISM_PUBLIC: "false"                     # No authentication required (disables password protection)
+      PHOTOPRISM_READONLY: "false"                   # Don't modify originals directory (reduced functionality)
+      PHOTOPRISM_EXPERIMENTAL: "false"               # Enables experimental features
+      PHOTOPRISM_DISABLE_WEBDAV: "false"             # Disables built-in WebDAV server
+      PHOTOPRISM_DISABLE_SETTINGS: "false"           # Disables Settings in Web UI
+      PHOTOPRISM_DISABLE_TENSORFLOW: "false"         # Disables using TensorFlow for image classification
+      PHOTOPRISM_DARKTABLE_PRESETS: "false"          # Enables Darktable presets and disables concurrent RAW conversion
+      PHOTOPRISM_DETECT_NSFW: "false"                # Flag photos as private that MAY be offensive (requires TensorFlow)
+      PHOTOPRISM_UPLOAD_NSFW: "true"                 # Allow uploads that MAY be offensive
+      PHOTOPRISM_DATABASE_DRIVER: "sqlite"         # SQLite is an embedded database that doesn't require a server
+      # PHOTOPRISM_DATABASE_DRIVER: "mysql"            # Use MariaDB (or MySQL) instead of SQLite for improved performance
+      # PHOTOPRISM_DATABASE_SERVER: "mariadb:{{mariadb_port}}"     # MariaDB database server (hostname:port)
+      # PHOTOPRISM_DATABASE_NAME: "{{photoprism_database}}"         # MariaDB database schema name
+      # PHOTOPRISM_DATABASE_USER: "{{photoprism_database_user}}"         # MariaDB database user name
+      # PHOTOPRISM_DATABASE_PASSWORD: "{{photoprism_database_password}}"       # MariaDB database user password
+      PHOTOPRISM_SITE_URL: "https://{{photo_tld}}"  # Public PhotoPrism URL
+      PHOTOPRISM_SITE_TITLE: "PhotoPrism"
+      PHOTOPRISM_SITE_CAPTION: "Browse Your Life"
+      PHOTOPRISM_SITE_DESCRIPTION: ""
+      PHOTOPRISM_SITE_AUTHOR: ""
+      PHOTOPRISM_STORAGE_PATH: "/photoprism/storage"
+      PHOTOPRISM_IMPORT_PAT: "/photoprism/import"
+      PHOTOPRISM_ORIGINALS_PATH: "/photoprism/originals"
+      PHOTOPRISM_THUMB_FILTER: "lanczos"
+      PHOTOPRISM_THUMB_UNCACHED: "false"
+      PHOTOPRISM_THUMB_SIZE: "2048"
+      PHOTOPRISM_THUMB_SIZE_UNCACHED: "7680"
+      PHOTOPRISM_JPEG_SIZE: "7680"
+      PHOTOPRISM_JPEG_QUALITY: "90"
+      PHOTOPRISM_DARKTABLE_PRESETS: "false"
+      UID: '{{docker_user}}'
+      GID: '{{users_group}}'
+    labels:
+      traefik.http.routers.photoprism.entrypoints: "websecure"
+      traefik.http.routers.photoprism.tls: "true"
+      traefik.http.routers.photoprism.rule: "Host(`{{photo_tld}}`)"
+      traefik.http.routers.photoprism.middlewares: "authelia@docker"
+      traefik.http.routers.photoprism.service: "photoprism"
+      traefik.http.services.photoprism.loadbalancer.server.port: "2342"
+      traefik.enable: "true"
+  tags: photoprism
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+  set_fact:
+    fqdn_services: "{{ fqdn_services + [item] }}"
+  with_items:
+    - "{{photo_tld}}"

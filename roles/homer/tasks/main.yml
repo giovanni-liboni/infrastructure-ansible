@@ -1,0 +1,76 @@
+---
+- name: Ensure Homer Directory Exist
+  file:
+    path: "{{project_directory}}/homer"
+    state: directory
+  tags: homer
+
+- name: Copy the current assets
+  ansible.builtin.copy:
+    src: assets/{{item}}
+    dest: "{{project_directory}}/homer"
+    directory_mode: yes
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: 755
+  tags: homer
+  notify: restart homer
+  with_items:
+    - "icons"
+    - "tools"
+    - "manifest.json"
+
+- name: Ensure Homer Configuration Files Exist
+  template:
+    src: config.yml.j2
+    dest: "{{project_directory}}/homer/config.yml"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: 755
+  tags: homer
+  no_log: true
+
+- name: Ensure Homer Directory Exist
+  file:
+    path: "{{project_directory}}/homer"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: 0755
+    recurse: yes
+  notify: restart homer
+  tags: homer
+
+- name: Create Homer Docker Container
+  community.general.docker_container:
+    name: homer
+    image: "b4bz/homer:{{homer_version}}"
+    pull: yes
+    hostname: homer
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/homer:/www/assets:rw"
+    labels:
+      traefik.http.routers.homer.entrypoints: "websecure"
+      traefik.http.routers.homer.tls: "true"
+      traefik.http.routers.homer.rule: "Host(`{{project_tld}}`,`www.{{project_tld}}`)"
+      traefik.http.routers.homer.service: "homer"
+      traefik.http.routers.homer.tls.certresolver: "dnsChallenge"
+      traefik.http.services.homer.loadbalancer.server.port: "8080"
+      traefik.enable: "true"
+    env:
+      UID: '{{docker_user}}'
+      GID: '{{users_group}}'
+  tags: homer
+
+- name: Add FQDN to the list of services available for '{{project_tld}}'
+  set_fact:
+   fqdn_services: "{{ fqdn_services + [item] }}"
+  with_items:
+   - "www.{{project_tld}}"
+   - "{{project_tld}}"

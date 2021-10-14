@@ -1,0 +1,26 @@
+---
+- name: Make sure pymysql is present
+  become: true # needed if the other tasks are not played as root
+  pip:
+    name: pymysql
+    state: present
+
+- name: Ensure MariaDB Databases are Present.
+  mysql_db:
+    login_host: "{{mariadb_host}}"
+    login_port: "{{mariadb_port}}"
+    login_password: "{{mariadb_root_password}}"
+    name: "{{database_name}}"
+    state: "present"
+
+- name: Ensure MariaDB Users are Present.
+  mysql_user:
+    login_host: "{{mariadb_host}}"
+    login_port: "{{mariadb_port}}"
+    login_password: "{{mariadb_root_password}}"
+    name: "{{database_user}}"
+    password: "{{database_password}}"
+    state: "present"
+    host: "{{database_name}}.proxy"
+    priv: "*.*:ALL"
+    update_password: on_create

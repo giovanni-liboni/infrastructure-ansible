@@ -1,0 +1,23 @@
+---
+- name: Create VPN Proxy Docker Container on port 3128
+  community.general.docker_container:
+    name: openvpn-proxy
+    image: "dceschmidt/openvpn-proxy"
+    pull: yes
+    hostname: openvpn-proxy
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      OPENVPN_PROVIDER: '{{ vault_openvpn_provider }}'
+      OPENVPN_USERNAME: '{{ vault_openvpn_username }}'
+      OPENVPN_PASSWORD: '{{ vault_openvpn_password }}'
+      OPENVPN_CONFIG: '{{ vault_openvpn_config }}'
+  tags: jackett

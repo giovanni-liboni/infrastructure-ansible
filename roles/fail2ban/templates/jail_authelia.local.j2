@@ -1,0 +1,9 @@
+[authelia]
+enabled = true
+port = http,https,9091
+filter = authelia
+logpath = /authelia/authelia.log
+maxretry = 3
+bantime = 1d
+findtime = 1d
+action = iptables-allports[name=authelia, chain=FORWARD]

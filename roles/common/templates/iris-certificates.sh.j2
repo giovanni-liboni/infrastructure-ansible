@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+export CF_API_TOKEN={{ vault_cloudflaretoken }}
+export CLOUDFLARE_ZONE_API_TOKEN=$CF_API_TOKEN
+export CLOUDFLARE_DNS_API_TOKEN=$CLOUDFLARE_DNS_API_TOKEN
+
+iris --zone="{{ vault_zone_name }}" --email="{{ vault_cloudflareemail}}" --subdomain="{{ ansible_fqdn }}" --create
+lego --path /etc/lego --email "{{ vault_cloudflareemail}}" --domains "{{ ansible_fqdn }}" --dns cloudflare renew
+iris --zone="{{ vault_zone_name }}" --email="{{ vault_cloudflareemail}}" --subdomain="{{ ansible_fqdn }}" --remove

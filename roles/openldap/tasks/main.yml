@@ -1,0 +1,54 @@
+---
+# https://github.com/osixia/docker-openldap#use-an-existing-ldap-database
+- name: Ensure OpenLDAP Directories Exist
+  file:
+    path: "{{project_directory}}/openldap/config"
+    state: directory
+  tags: openldap
+
+- name: Create OpenLDAP Docker Container
+  community.general.docker_container:
+    name: openldap
+    image: "osixia/openldap:1.5.0"
+    pull: yes
+    hostname: "ldap.{{project_tld}}"
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    privileged: true
+    state: started
+    env:
+      TZ: "{{default_timezone}}"
+      LDAP_OPENLDAP_UID: '{{docker_user}}'
+      LDAP_OPENLDAP_GID: '{{users_group}}'
+      LDAP_REPLICATION: 'true'
+      LDAP_REPLICATION_HOSTS: "#PYTHON2BASH:['ldap://naso.{{project_tld}}','ldap://ldap.{{project_tld}}']"
+      HOSTNAME: 'ldap.{{project_tld}}'
+      LDAP_DOMAIN: '{{project_tld}}'
+      LDAP_ADMIN_PASSWORD: "{{ldap_admin_password}}"
+      LDAP_CONFIG_PASSWORD: "{{ldap_admin_password}}"
+      LDAP_BASE_DN: '{{ldap_base_dn}}'
+      CONTAINER_LOG_LEVEL: '4'
+      LDAP_TLS_VERIFY_CLIENT: 'false'
+      LDAP_TLS: 'false'
+    labels:
+      traefik.tcp.routers.openldap.entrypoints: "ldap"
+      traefik.tcp.routers.openldap.rule: "Host(`ldap.{{project_tld}}`)"
+      traefik.tcp.routers.openldap.service: "openldap"
+      traefik.tcp.services.openldap.loadbalancer.server.port: "389"
+
+      traefik.tcp.routers.openldaps.entrypoints: "ldaps"
+      traefik.tcp.routers.openldaps.tls: "true"
+      traefik.tcp.routers.openldaps.rule: "Host(`ldap.{{project_tld}}`)"
+      traefik.tcp.routers.openldaps.service: "openldaps"
+      traefik.tcp.routers.openldaps.tls.certresolver: "dnsChallenge"
+      traefik.tcp.services.openldaps.loadbalancer.server.port: "636"
+
+      traefik.enable: "true"
+  tags: openldap

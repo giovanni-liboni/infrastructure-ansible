@@ -1,0 +1,113 @@
+---
+- name: Ensure Authelia Directory Exist
+  file:
+    path: "{{ project_directory }}/authelia"
+    state: directory
+  tags: authelia
+
+- name: Ensure Authelia Configuration Files Exist
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: '0600'
+  with_items:
+    - {src: configuration.yml.j2,dest: "{{project_directory}}/authelia/configuration.yml"}
+    - {src: users_database.yml.j2,dest: "{{project_directory}}/authelia/users_database.yml"}
+  tags: authelia
+  no_log: false
+  notify: restart authelia
+  
+- name: Ensure Authelia JWT File Exists
+  ansible.builtin.copy:
+    content: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.Z1GPrR-AJkAidqe3UCwTViKTdAsCi6EJbYkYt4olc8k"
+    dest: "{{project_directory}}/authelia/authelia_jwt_secret"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: '0600'
+  notify: restart authelia
+  tags: authelia
+
+- name: Ensure Authelia Session Secret File Exists
+  ansible.builtin.copy:
+    content: "{{authelia_session_secret}}"
+    dest: "{{project_directory}}/authelia/authelia_session_secret"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: '0600'
+  notify: restart authelia
+  tags: authelia
+
+- name: Ensure Authelia LDAP password File Exists
+  ansible.builtin.copy:
+    content: "{{ldap_admin_password}}"
+    dest: "{{project_directory}}/authelia/authelia_authetication_backend_ldap_password_secret"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: '0600'
+  notify: restart authelia
+  tags: authelia
+
+- name: Ensure Authelia SMTP password File Exists
+  ansible.builtin.copy:
+    content: "{{smtp_password}}"
+    dest: "{{project_directory}}/authelia/authelia_smtp_password"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: '0600'
+  notify: restart authelia
+  tags: authelia
+
+- name: Ensure Authelia Database password File Exists
+  ansible.builtin.copy:
+    content: "{{authelia_db_password}}"
+    dest: "{{project_directory}}/authelia/authelia_db_password"
+    owner: '{{docker_user}}'
+    group: '{{users_group}}'
+    mode: '0600'
+  notify: restart authelia
+  tags: authelia
+
+- import_tasks: roles/mariadb/tasks/database_manager.yml
+  vars:
+    database_name: "authelia"
+    database_user: "authelia"
+    database_password: "{{authelia_db_password}}"
+  tags: authelia
+
+# Exposed port 9091
+- name: Create Authelia Docker Container
+  community.general.docker_container:
+    name: authelia
+    image: "authelia/authelia:{{authelia_version}}"
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    pull: yes
+    hostname: authelia
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/authelia:/config"
+      - "/etc/localtime:/etc/localtime:ro"
+    env:
+      # https://www.authelia.com/docs/configuration/secrets.html
+      AUTHELIA_JWT_SECRET_FILE: "/config/authelia_jwt_secret"
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: "/config/authelia_authetication_backend_ldap_password_secret"
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: "/config/authelia_smtp_password"
+      AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE: "/config/authelia_db_password"
+      AUTHELIA_SESSION_SECRET_FILE: "/config/authelia_session_secret"
+    labels:
+      # HTTP Routers
+      traefik.http.routers.authelia.rule: "Host(`login.{{vault_domain_tld}}`)"
+      traefik.http.routers.authelia.entrypoints: "websecure"
+      traefik.http.routers.authelia.tls: "true"
+      traefik.http.routers.authelia.tls.options: "default"
+      traefik.enable: "true"
+  tags: authelia

@@ -1,0 +1,3 @@
+---
+jackett_admin_password: "{{vault_jackett_admin_password}}"
+jackett_instanceid: "{{vault_jackett_instanceid}}"

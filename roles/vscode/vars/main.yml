@@ -1,0 +1,4 @@
+---
+vscode_password: "{{vault_vscode_password}}"
+vscode_sudo_password: "{{vault_vscode_sudo_password}}"
+ssh_key_codeserver: "{{vault_ssh_key_codeserver}}"
