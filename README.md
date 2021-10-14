@@ -37,18 +37,23 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
+    <li><a href="#playbooks">Playbooks</a></li>
+    <ul>
+        <li><a href="#base-services">Base Services</a></li>
+        <li><a href="#core-services">Core Services</a></li>
+        <li><a href="#media-services">Media Services</a></li>
+        <li><a href="#other-playbooks">Other Playbooks</a></li>
+      </ul>
+    <li><a href="#development-guidelines">Development guidelines</a></li>
+    <li><a href="#ansible-tips">Ansible tips</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ol>
 </details>
-
-
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
@@ -103,7 +108,7 @@ Now it's time to install `ansible` into the virtual environment
     pip install -r requirements.txt
     ```
 
-## Playbooks available
+## Playbooks
 
 ### Base Services
 
