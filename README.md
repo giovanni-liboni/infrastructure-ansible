@@ -58,7 +58,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This repository is a collection of Ansible Playbooks and assets deployed on my servers at home and in the cloud (GCE, Oracle Cloud). It includes home automation projects, movies and TV series management systems, 3D print monitor and timelapses servers, and more. The project is for educational purposes.
+This repository is a collection of Ansible Playbooks and assets deployed on my servers at home and in the cloud (GCE, Oracle Cloud). It includes home automation projects, movies and TV series management systems, 3D print manager and time-lapse servers, and more. 
+
+This project is for educational purposes.
 
 <!-- GETTING STARTED -->
 ## Getting Started
