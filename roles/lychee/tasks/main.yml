@@ -30,7 +30,7 @@
     networks:
       - name: proxy
     networks_cli_compatible: yes
-    state: started
+    state: stopped
     volumes:
       - "{{photo_directory}}/lychee/uploads:/uploads"
       - "{{photo_directory}}/lychee/sym:/sym"

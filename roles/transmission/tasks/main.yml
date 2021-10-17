@@ -34,8 +34,6 @@
     pull: yes
     image: "haugene/transmission-openvpn:{{transmission_version}}"
     state: started
-    groups:
-      - netdev
     restart_policy: unless-stopped
     network_mode: default
     networks_cli_compatible: yes
