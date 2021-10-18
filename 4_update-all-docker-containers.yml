@@ -10,8 +10,6 @@
     - authelia
     - homer
     - vscode
-    # - filebot
-    # - addarr
     - proxy
     - syncthing
     - bitwarden
