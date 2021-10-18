@@ -14,6 +14,7 @@
     group: "{{users_group}}"
   tags: overleaf
 
+# TODO
 # Check if it exists
 # If not, then check if a backup exists
 # If yes, restore the backup
@@ -23,10 +24,8 @@
     name: overleaf
     hostname: overleaf
     pull: yes
-    image: sharelatex/sharelatex:with-texlive-full
+    image: "sharelatex/sharelatex:{{sharelatex_version}}"
     state: stopped
-    groups:
-      - netdev
     restart_policy: unless-stopped
     network_mode: default
     networks_cli_compatible: yes
