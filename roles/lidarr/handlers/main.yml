@@ -1,0 +1,7 @@
+---
+- name: Restart Lidarr
+  community.general.docker_container:
+    name: lidarr
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart lidarr

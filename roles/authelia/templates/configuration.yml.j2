@@ -1,12 +1,42 @@
 ###############################################################
 #                   Authelia configuration                    #
 ###############################################################
+## The theme to display: light, dark, grey, auto.
+theme: auto
 
-host: 0.0.0.0
-port: 9091
-log_level: info
-log_file_path: /config/authelia.log
 default_redirection_url: "https://{{project_tld}}"
+
+
+##
+## Server Configuration
+##
+server:
+
+  ## The address to listen on.
+  host: 0.0.0.0
+
+  ## The port to listen on.
+  port: 9091
+
+  ## Set the single level path Authelia listens on.
+  ## Must be alphanumeric chars and should not contain any slashes.
+  path: ""
+
+  ## Set the path on disk to Authelia assets.
+  ## Useful to allow overriding of specific static assets.
+  # asset_path: /config/assets/
+
+  ## Buffers usually should be configured to be the same value.
+  ## Explanation at https://www.authelia.com/docs/configuration/server.html
+  ## Read buffer size adjusts the server's max incoming request size in bytes.
+  ## Write buffer size does the same for outgoing responses.
+  read_buffer_size: 8192
+  write_buffer_size: 8192
+
+log:
+  level: info
+  file_path: /config/authelia.log
+
 
 # Time-based One-Time Password
 totp:
@@ -15,6 +45,18 @@ totp:
   skew: 1
 
 authentication_backend:
+## Disable both the HTML element and the API for reset password functionality.
+  disable_reset_password: true
+
+  ## The amount of time to wait before we refresh data from the authentication backend. Uses duration notation.
+  ## To disable this feature set it to 'disable', this will slightly reduce security because for Authelia, users will
+  ## always belong to groups they belonged to at the time of login even if they have been removed from them in LDAP.
+  ## To force update on every request you can set this to '0' or 'always', this will increase processor demand.
+  ## See the below documentation for more information.
+  ## Duration Notation docs:  https://www.authelia.com/docs/configuration/index.html#duration-notation-format
+  ## Refresh Interval docs: https://www.authelia.com/docs/configuration/authentication/ldap.html#refresh-interval
+  refresh_interval: 5m
+
   # file:
   #   path: /config/users_database.yml
   ldap:
@@ -41,6 +83,11 @@ access_control:
         - "file.{{domain_tld}}"
         - "share.{{domain_tld}}"
         - "cinema.{{domain_tld}}"
+      policy: bypass
+    - domain:
+      - "*.{{project_tld}}"
+      networks:
+        - 192.168.0.0/16
       policy: bypass
     - domain: "vault.{{domain_tld}}"
       policy: bypass
@@ -70,8 +117,8 @@ session:
     port: 6379
 
 regulation:
-  max_retries: 7
-  find_time: 120
+  max_retries: 5
+  find_time: 3m
   ban_time: 1M
 
 storage:

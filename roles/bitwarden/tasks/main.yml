@@ -35,7 +35,7 @@
     networks:
       - name: proxy
     networks_cli_compatible: yes
-    state: stopped
+    state: started
     env:
       WEBSOCKET_ENABLED: "true"
       SIGNUPS_ALLOWED: "false"

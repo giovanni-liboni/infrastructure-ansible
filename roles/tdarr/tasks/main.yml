@@ -22,7 +22,7 @@
     networks:
       - name: proxy
     networks_cli_compatible: yes
-    state: started
+    state: stopped
     env:
       PUID: "{{docker_user}}"
       PGID: "{{users_group}}"

@@ -1,31 +1,20 @@
 ---
-# Github: https://github.com/overleaf/overleaf/wiki/Quick-Start-Guide
-- name: Ensure Overleaf data directory exists
+# Github: https://hub.docker.com/r/minio/minio/
+- name: Ensure minio config directory exists
   file:
-    path: "{{permanent_cache_directory}}/overleaf"
-    state: directory
-  tags: overleaf
-
-- name: Ensure overleaf config directory exists
-  file:
-    path: "{{project_directory}}/overleaf/config"
+    path: "{{project_directory}}/minio/config"
     state: directory
     owner: "{{docker_user}}"
     group: "{{users_group}}"
-  tags: overleaf
+  tags: minio
 
-# TODO
-# Check if it exists
-# If not, then check if a backup exists
-# If yes, restore the backup
-
-- name: Start Overleaf aka Sharelatex
+- name: Start Minio
   community.docker.docker_container:
     name: overleaf
     hostname: overleaf
     pull: yes
-    image: "sharelatex/sharelatex:{{sharelatex_version}}"
-    state: stopped
+    image: "minio/minio:{{minio_version}}"
+    state: started
     restart_policy: unless-stopped
     network_mode: default
     networks_cli_compatible: yes

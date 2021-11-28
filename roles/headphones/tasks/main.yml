@@ -1,0 +1,43 @@
+- name: Ensure Headphones Directory Exist
+  file:
+    path: "{{project_directory}}/headphones"
+    state: directory
+  tags: headphones
+
+- name: Create Headphones Docker Container
+  community.general.docker_container:
+    name: headphones
+    image: "lscr.io/linuxserver/headphones:{{headphones_version}}"
+    pull: yes
+    hostname: headphones
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      DOCKER_MODS: "gilbn/theme.park:headphones"
+      TP_THEME: "{{theme_park_default}}"
+    volumes:
+      - "{{project_directory}}/headphones:/config"
+      - "/mnt/music:/music"
+      - "{{permanent_cache_directory}}/torrent/completed:/data/completed"
+      - "/etc/localtime:/etc/localtime:ro"
+    labels:
+      traefik.http.routers.headphones.entrypoints: "websecure"
+      traefik.http.routers.headphones.tls: "true"
+      traefik.http.routers.headphones.rule: "Host(`headphones.{{project_tld}}`)"
+      traefik.http.routers.headphones.middlewares: "authelia@docker"
+      traefik.http.routers.headphones.service: "headphones"
+      traefik.http.routers.headphones.tls.certresolver: "dnsChallenge"
+      traefik.http.services.headphones.loadbalancer.server.port: "8181"
+      traefik.enable: "true"
+  tags: headphones

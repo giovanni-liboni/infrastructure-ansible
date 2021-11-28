@@ -4,7 +4,6 @@
   become: yes
   roles:
     - common
-    - custom
     - ansible-ssh-hardening
   vars:
     ssh_banner: true
@@ -18,7 +17,7 @@
       users:
         - username: '{{ vault_ansible_user }}'
 
-- name: Install Print server if in printing group
+- name: Install Print server
   hosts: printing
   become: yes
   roles:
@@ -36,6 +35,7 @@
         name: docker
         state: present
         gid: "{{docker_group}}"
+    
     - name: Add the user 'docker' with a specific uid and a primary group of 'docker'
       ansible.builtin.user:
         name: docker
@@ -45,15 +45,40 @@
         shell: /usr/sbin/nologin
         groups: render,docker,users
         append: yes
-        password: '{{ vault_password_giovanni }}'
+        password: '{{ vault_ansible_user_password }}'
+    
     - name: Add user '{{ vault_ansible_user }}' to 'docker' group
       ansible.builtin.user:
         name: '{{ vault_ansible_user }}'
         groups: docker
         append: yes
-        
+   
+    - name: Install aptitude using apt
+      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+    
+    - name: Install required system packages
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
+   
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt: update_cache=yes name=docker-ce state=latest
+
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+
 - name: Mount the network data for docker
-  hosts: docker
+  hosts: docker-internal
   become: yes
   tasks:
     - name: Ensure data directory exists
@@ -109,10 +134,10 @@
   hosts: all
   become: yes
   tasks:
-    - debug:
-        msg: |
-          ansible_user: {{ ansible_user | d('unset') }};
-          remote_user: {{ remote_user | d('unset') }}
+    # - debug:
+    #     msg: |
+    #       ansible_user: {{ ansible_user | d('unset') }};
+    #       remote_user: {{ remote_user | d('unset') }}
     - name: Change remote user
       set_fact:
         current_user: '{{ vault_ansible_user }}'

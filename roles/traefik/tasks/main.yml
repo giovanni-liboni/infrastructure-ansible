@@ -6,23 +6,13 @@
   tags: traefik
 
 # - name: Ensure Acme File Exists
-#   copy:
-#     content: ""
-#     dest: "{{project_directory}}/traefik/acme.json"
-#     force: no
+#   file:
+#     path: "{{project_directory}}/traefik/letsencrypt/acme.json"
 #     owner: root
 #     mode: 0600
+#     state: touch
 #   no_log: false
 #   tags: traefik
-
-- name: Ensure Acme File Exists
-  file:
-    path: "{{project_directory}}/traefik/letsencrypt/acme.json"
-    owner: root
-    mode: 0600
-    state: touch
-  no_log: false
-  tags: traefik
 
 - name: Ensure Traefik Configuration Files Exist
   template:

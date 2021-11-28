@@ -1,0 +1,39 @@
+---
+# Github: https://github.com/michaelmob/docker-funkwhale
+- name: Start Funkwhale
+  community.docker.docker_container:
+    name: funkwhale
+    hostname: funkwhale
+    pull: yes
+    image: "thetarkus/funkwhale:{{funkwhale_version}}"
+    state: started
+    restart_policy: unless-stopped
+    network_mode: default
+    networks_cli_compatible: yes
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - "{{permanent_cache_directory}}/funkwhale:/data:rw"
+      - "/mnt/music:/music:ro"
+    ports:
+      - "3030:80"
+    labels:
+      traefik.http.routers.funkwhale.entrypoints: "websecure"
+      traefik.http.routers.funkwhale.tls: "true"
+      traefik.http.routers.funkwhale.rule: "Host(`music.{{project_tld}}`)"
+      traefik.http.routers.funkwhale.middlewares: "authelia@docker"
+      traefik.http.routers.funkwhale.service: "funkwhale"
+      traefik.http.routers.funkwhale.tls.certresolver: "dnsChallenge"
+      traefik.http.services.funkwhale.loadbalancer.server.port: "80"
+      traefik.enable: "true"
+    env:
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+      FUNKWHALE_HOSTNAME: 'music.{{project_tld}}'
+      NESTED_PROXY: "1"
+  tags: funkwhale

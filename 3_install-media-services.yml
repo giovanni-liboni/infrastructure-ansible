@@ -1,6 +1,6 @@
 ---
 - name: Install required packages
-  hosts: docker
+  hosts: docker-internal
   become: yes
   tasks:
     - name: Install required packages
@@ -13,7 +13,7 @@
         state: present
 
 - name: Deploy media services
-  hosts: docker
+  hosts: docker-internal
   become: yes 
   roles:
     - jackett
@@ -25,6 +25,7 @@
     - calibre-web
     - calibre    
     - tdarr
+    - headphones
 
 - name: Register DNS names in Mikrotik
   hosts: routeros

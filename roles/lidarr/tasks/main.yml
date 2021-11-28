@@ -1,0 +1,44 @@
+---
+- name: Ensure Lidarr Directory Exist
+  file:
+    path: "{{project_directory}}/lidarr"
+    state: directory
+  tags: lidarr
+
+- name: Create Lidarr Docker Container
+  community.general.docker_container:
+    name: lidarr
+    image: "linuxserver/lidarr:{{lidarr_version}}"
+    pull: yes
+    hostname: lidarr
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: stopped
+    env:
+      PUID: "{{docker_user}}"
+      PGID: "{{users_group}}"
+      TZ: "{{default_timezone}}"
+      DOCKER_MODS: "gilbn/theme.park:lidarr"
+      TP_THEME: "{{theme_park_default}}"
+    volumes:
+      - "{{project_directory}}/lidarr:/config"
+      - "/mnt/music:/music"
+      - "{{permanent_cache_directory}}/torrent/completed:/data/completed"
+      - "/etc/localtime:/etc/localtime:ro"
+    labels:
+      traefik.http.routers.lidarr.entrypoints: "websecure"
+      traefik.http.routers.lidarr.tls: "true"
+      traefik.http.routers.lidarr.rule: "Host(`lidarr.{{project_tld}}`)"
+      traefik.http.routers.lidarr.middlewares: "authelia@docker"
+      traefik.http.routers.lidarr.service: "lidarr"
+      traefik.http.routers.lidarr.tls.certresolver: "dnsChallenge"
+      traefik.http.services.lidarr.loadbalancer.server.port: "8686"
+      traefik.enable: "true"
+  tags: lidarr

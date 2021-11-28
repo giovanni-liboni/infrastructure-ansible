@@ -56,6 +56,21 @@
     fstype: nfs
   tags: local-srv
 
+- name: Ensure music directory exists
+  file:
+    path: /mnt/music
+    state: directory
+  tags: local-srv
+
+- name: Mount the music NFS volume
+  ansible.posix.mount:
+    src: '{{vault_nfs_server_ip}}:/volume1/music'
+    path: /mnt/music
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs
+  tags: local-srv
+
 - name: Set the Restic passoword file
   copy:
     content: "{{restic_password}}"
