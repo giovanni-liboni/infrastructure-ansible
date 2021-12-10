@@ -1,0 +1,37 @@
+---
+- name: Ensure Sabnzbd Directory Exist
+  file:
+    path: "{{project_directory}}/sabnzbd"
+    state: directory
+  tags: sabnzbd
+
+- name: Create Sabnzbd Docker Container
+  community.general.docker_container:
+    name: sabnzbd
+    image: "linuxserver/sabnzbd:{{sabnzbd_version}}"
+    pull: yes
+    # workaround to fix the error message while creating the container: 
+    # conflicting options: hostname and the network mode
+    # hostname: sabnzbd
+    container_default_behavior: compatibility
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    # Use the VPN network provided by  haugene/docker-transmission-openvpn
+    # If not needed, set the network_mode to "default"
+    network_mode: "container:transmission"
+    # networks:
+    #   - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+      DOCKER_MODS: "gilbn/theme.park:sabnzbd"
+      TP_THEME: "{{theme_park_default}}"
+    volumes:
+      - "{{project_directory}}/sabnzbd:/config"
+      - "{{permanent_cache_directory}}/torrent:/data:rw"
+  tags: sabnzbd

@@ -29,15 +29,6 @@
     - psitransfer
     - pwndrop
 
-- name: Deploy external core services
-  hosts: docker-external
-  become: yes
-  roles:
-    - tecnativa
-    - traefik
-    - fail2ban
-    - bitwarden
-    
 - name: Register DNS names in Mikrotik
   hosts: routeros
   tasks:

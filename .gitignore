@@ -4,3 +4,4 @@ production
 staging
 vault.yml
 group_vars/all
+host_vars

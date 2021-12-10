@@ -1,17 +1,4 @@
 ---
-- name: Install required packages
-  hosts: docker-internal
-  become: yes
-  tasks:
-    - name: Install required packages
-      package:
-        name:
-          - python3
-          - python3-pip
-          - python3-docker
-          - python3-setuptools
-        state: present
-
 - name: Deploy media services
   hosts: docker-internal
   become: yes 
@@ -24,8 +11,15 @@
     - bazarr
     - calibre-web
     - calibre    
-    - tdarr
     - headphones
+    - sabnzbd
+    - hydra
+
+- name: Deploy external docker services
+  hosts: docker-external
+  become: yes
+  roles:
+    - tdarr
 
 - name: Register DNS names in Mikrotik
   hosts: routeros

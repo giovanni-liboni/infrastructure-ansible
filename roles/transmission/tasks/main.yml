@@ -73,6 +73,22 @@
       traefik.http.routers.transmission.tls.certresolver: "dnsChallenge"
       traefik.http.services.transmission.loadbalancer.server.port: "9091"
       traefik.enable: "true"
+      # Expose the port for the connected container (see sabnzbd role)
+      traefik.http.routers.sabnzbd.entrypoints: "websecure"
+      traefik.http.routers.sabnzbd.tls: "true"
+      traefik.http.routers.sabnzbd.rule: "Host(`sabnzbd.{{project_tld}}`)"
+      traefik.http.routers.sabnzbd.middlewares: "authelia@docker"
+      traefik.http.routers.sabnzbd.service: "sabnzbd"
+      traefik.http.services.sabnzbd.loadbalancer.server.port: "8080"
+
+      traefik.http.routers.hydra.entrypoints: "websecure"
+      traefik.http.routers.hydra.tls: "true"
+      traefik.http.routers.hydra.rule: "Host(`hydra.{{project_tld}}`)"
+      # traefik.http.middlewares.hydra_rewrite_theme.plugin.rewritebody.rewrites.regex: "</head>"
+      # traefik.http.middlewares.hydra_rewrite_theme.plugin.rewritebody.rewrites.replacement: "<link rel=stylesheet type=text/css href=https://gilbn.github.io/theme.park/CSS/themes/nzbhydra2/{{theme_park_default}}.css></head>"
+      # traefik.http.routers.hydra.middlewares: "authelia@docker"
+      traefik.http.routers.hydra.service: "hydra"
+      traefik.http.services.hydra.loadbalancer.server.port: "5076"
     env:
       OPENVPN_PROVIDER: '{{ vault_openvpn_provider }}'
       OPENVPN_USERNAME: '{{ vault_openvpn_username }}'

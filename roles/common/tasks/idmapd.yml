@@ -1,0 +1,3 @@
+---
+- name: idmapd config
+  template: src=idmapd.conf.j2 dest=/etc/idmapd.conf owner=root group=root mode=0644

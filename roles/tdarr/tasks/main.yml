@@ -34,7 +34,6 @@
       - "{{project_directory}}/tdarr/server:/app/server"
       - "{{project_directory}}/tdarr/configs:/app/configs"
       - "{{project_directory}}/tdarr/logs:/logs"
-      # - "{{project_directory}}/tdarr/data:/var/lib/mongodb"
       - "{{data_directory}}:/media"
       - "{{permanent_cache_directory}}/tdarr/transcode:/temp"
       - /etc/localtime:/etc/localtime:ro
@@ -81,7 +80,6 @@
     volumes:
       - "{{project_directory}}/tdarr/configs:/app/configs"
       - "{{project_directory}}/tdarr/logs:/logs"
-      # - "{{project_directory}}/tdarr/data:/var/lib/mongodb"
       - "{{data_directory}}:/media"
       - "{{permanent_cache_directory}}/tdarr/transcode:/temp"
       - /etc/localtime:/etc/localtime:ro

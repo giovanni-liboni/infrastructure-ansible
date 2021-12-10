@@ -1,0 +1,32 @@
+---
+- name: Ensure Hydra Directory Exist
+  file:
+    path: "{{project_directory}}/hydra"
+    state: directory
+    owner: "{{docker_user}}"
+    group: "{{users_group}}"
+  tags: hydra
+
+- name: Create Hydra Docker Container
+  community.general.docker_container:
+    name: hydra
+    image: "lscr.io/linuxserver/nzbhydra2:{{hydra_version}}"
+    pull: yes
+    # hostname: hydra
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    network_mode: "container:transmission"
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: '{{docker_user}}'
+      PGID: '{{users_group}}'
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/hydra:/config"
+      - "{{permanent_cache_directory}}/torrent:/data:rw"
+  tags: hydra

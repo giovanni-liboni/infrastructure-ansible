@@ -1,0 +1,12 @@
+---
+hydra_user: "hydra"
+hydra_user_password: "{{vault_hydra_user_password}}"
+hydra_nzbgeek_apikey: "{{vault_hydra_nzbgeek_apikey}}"
+hydra_nzbgeek_host: "https://api.nzbgeek.info"
+hydra_simplynzbs_apikey: "{{cec223fe5d45b869613303820c7c0205}}"
+hydra_simplynzbs_host: "https://simplynzbs.com"
+hydra_nzbplanet_apikey: "{{vault_hydra_nzbplanet_apikey}}"
+hydra_nzbplanet_host: "https://nzbplanet.net"
+hydra_nzbhydra2_dereferer: "http://www.dereferer.org/?$s"
+hydra_nzbhydra2_apikey: "{{vault_hydra_nzbhydra2_apikey}}"
+hydra_nzbhydra2_repository: "https://github.com/theotherp"

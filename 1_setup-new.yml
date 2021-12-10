@@ -1,4 +1,19 @@
 ---
+- name: Setup users and groups
+  hosts: all
+  become: yes
+  roles:
+    - users
+
+- name: Install zsh
+  hosts: all
+  become: yes
+  roles:
+    - role: gantsign.oh-my-zsh
+      become: yes
+      users:
+        - username: '{{ vault_ansible_user }}'
+
 - name: Apply common configuration to all nodes
   hosts: all
   become: yes
@@ -8,14 +23,12 @@
   vars:
     ssh_banner: true
 
-- name: Apply personalization to all nodes
-  hosts: all
+- name: Install Wireguard client
+  hosts: docker-external
   become: yes
+  no_log: false
   roles:
-    - role: gantsign.oh-my-zsh
-      become: yes
-      users:
-        - username: '{{ vault_ansible_user }}'
+    - githubixx.ansible_role_wireguard
 
 - name: Install Print server
   hosts: printing
@@ -76,6 +89,10 @@
     - name: Install Docker Module for Python
       pip:
         name: docker
+
+    - name: Ensure defaults networks exist
+      community.docker.docker_network:
+        name: proxy
 
 - name: Mount the network data for docker
   hosts: docker-internal
@@ -148,3 +165,4 @@
         name: ubuntu
         state: absent
         remove: yes
+        

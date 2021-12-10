@@ -10,70 +10,15 @@
       - nfs-common
       - restic
       - git
+      - figlet # Required by welcome
+      - quota  # Required by welcome
+      - nfs-common
     state: present
-  tags: common-configuration
-
-# # Package required by local-srv to install Restic backup solution
-# - name: Install required Pyhton packages
-#   pip:
-#     name: 
-#       - jmespath
-#   tags: local-srv
-
-- name: Install message binary
-  become: yes
-  copy:
-    src: welcome-message/welcome/bin/welcome
-    dest: /usr/bin/welcome
-    owner: root
-    group: root
-    mode: 0755
   tags: common-configuration
     
-- name: Make sure we have a 'wheel' group
-  group:
-    name: wheel
-    state: present
-  tags: common-configuration
+- include_tasks: welcome.yml
 
-- name: Allow 'wheel' group to have passwordless sudo
-  lineinfile:
-    dest: /etc/sudoers
-    state: present
-    regexp: '^%wheel'
-    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
-    validate: 'visudo -cf %s'
-  tags: common-configuration
+- include_tasks: mount-nfs.yml
 
-- name: Ensure group "users" exists with correct gid
-  ansible.builtin.group:
-    name: users
-    state: present
-    gid: 100
-  tags: common-configuration
-
-- name: Ensure group "'{{vault_ansible_user_group}}'" exists with correct gid
-  ansible.builtin.group:
-    name: '{{vault_ansible_user}}'
-    state: present
-    gid: '{{vault_ansible_user_gid}}'
-  tags: common-configuration
-
-- name: Add the user '{{vault_ansible_user}}' with a specific uid and a primary group of 'admin'
-  ansible.builtin.user:
-    name: '{{vault_ansible_user}}'
-    comment: '{{vault_ansible_user}}'
-    uid: '{{vault_ansible_user_uid}}'
-    group: '{{vault_ansible_user_group}}'
-    shell: /bin/zsh
-    groups: sudo,wheel,render,users
-    append: yes
-    password: '{{ vault_ansible_user_password}}'
-  tags: common-configuration
-
-- name: Set authorized key for '{{vault_ansible_user}}'
-  authorized_key:
-    user: '{{vault_ansible_user}}'
-    state: present
-    key: '{{vault_public_ssh_key}}'
-  tags: common-configuration
+- include_tasks: idmapd.yml
+  when: idmapd_enabled

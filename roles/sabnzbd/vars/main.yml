@@ -1,0 +1,11 @@
+---
+sabnzbd_user: "sabnzbd"
+sabnzbd_user_password: "{{vault_sabnzbd_user_password}}"
+sabnzbd_download_dir: "/media/downloads/incomplete"
+sabnzbd_complete_dir: "/media/downloads"
+sabnzbd_base_url: "/sabnzbd"
+sabnzbd_nzb_key: "{{vault_sabnzbd_nzb_key}}"
+sabnzbd_email_password: "{{vault_sabnzbd_email_password}}"
+sabnzbd_newsgroup_ninja_username: "{{vault_sabnzbd_newsgroup_ninja_username}}"
+sabnzbd_newsgroup_ninja_password: "{{vault_sabnzbd_newsgroup_ninja_password}}"
+sabnzbd_newsgroup_ninja_host: "news.newsgroup.ninja"

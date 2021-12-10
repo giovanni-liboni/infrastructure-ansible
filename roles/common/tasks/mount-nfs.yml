@@ -1,0 +1,16 @@
+---
+- name: Ensure mount directory exists
+  file:
+    path: "{{item.path}}"
+    state: directory
+  with_items: "{{nfsmounts}}"
+  tags: mount-nfs
+
+- name: mount the nfsshare in client side
+  mount:
+    fstype: nfs
+    opts: rw,sync,hard,intr
+    state: mounted
+    src: "{{item.src}}"
+    path: "{{item.path}}"
+  with_items: "{{nfsmounts}}"

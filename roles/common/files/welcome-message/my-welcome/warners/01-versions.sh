@@ -31,13 +31,13 @@ function checkForNewVersion {
 # Check for packages
 
 # Ruby
-checkForNewVersion "ruby" "Ruby" "ruby -v | sed 's/ruby \(.*\?\) (.*/\1/'"
+# checkForNewVersion "ruby" "Ruby" "ruby -v | sed 's/ruby \(.*\?\) (.*/\1/'"
 
 # Node.js
-checkForNewVersion "nodejs" "Node.js" "node -v | sed 's/v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/'"
+# checkForNewVersion "nodejs" "Node.js" "node -v | sed 's/v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/'"
 
 # PHP
-checkForNewVersion "php" "PHP" "php -v | grep 'built:' | sed 's/PHP \([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/'"
+# checkForNewVersion "php" "PHP" "php -v | grep 'built:' | sed 's/PHP \([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/'"
 
 # ------
 # Output

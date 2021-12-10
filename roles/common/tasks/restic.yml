@@ -1,4 +1,11 @@
 ---
+# # Package required by local-srv to install Restic backup solution
+# - name: Install required Pyhton packages
+#   pip:
+#     name: 
+#       - jmespath
+#   tags: local-srv
+
 - name: Install defaults packages
   package:
     name:
