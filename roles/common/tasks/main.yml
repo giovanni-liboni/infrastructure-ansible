@@ -1,4 +1,5 @@
 ---
+
 - name: Install defaults packages
   package:
     name:
@@ -6,19 +7,56 @@
       - tmux
       - sudo
       - zsh
+      - git
+      - quota  # Required by welcome
+    state: present
+  tags: common-configuration
+
+- name: Install additional packages available only on Ubuntu/Debian
+  package:
+    name:
       - magic-wormhole
       - nfs-common
       - restic
-      - git
-      - figlet # Required by welcome
-      - quota  # Required by welcome
-      - nfs-common
+      - figlet
     state: present
   tags: common-configuration
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Install figlet on CentOS 8
+  yum:
+    name: https://download-ib01.fedoraproject.org/pub/epel/8/Everything/aarch64/Packages/f/figlet-2.2.5-18.20151018gita565ae1.el8.aarch64.rpm
+    state: present
+    disable_gpg_check: True
+  when: ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '8'
+
+# TODO: https://restic.readthedocs.io/en/latest/020_installation.html
+# - name: Install yum-plugin-copr on CentOS
+#   yum:
+#     name: yum-plugin-copr
+#     state: latest
+#   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+# - name: Install restic on CentOS and Red Hat
+#   shell: yum copr enable copart/restic
+#   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+# - name: Install restic on CentOS
+#   yum:
+#     name: restic
+#     state: latest
+#   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+
+- name: Set the correct admin group for Ubuntu and Debian
+  set_fact:
+    admin_group: 'sudo'
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
     
 - include_tasks: welcome.yml
 
 - include_tasks: mount-nfs.yml
 
 - include_tasks: idmapd.yml
-  when: idmapd_enabled
+  when: idmapd_enabled is defined and idmapd_enabled

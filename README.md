@@ -65,6 +65,10 @@ This project is for educational purposes.
 <!-- GETTING STARTED -->
 ## Getting Started
 
+### Supported OSes
+
+Tested for Ubuntu 20.04 and CentOS 8
+
 ### Prerequisites
 
 Let's first install the required Python dependencies:

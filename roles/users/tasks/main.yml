@@ -29,6 +29,16 @@
     gid: '{{vault_ansible_user_gid}}'
   tags: common-configuration
 
+- name: Set the correct admin group for CentOS and Red Hat
+  set_fact:
+    admin_group: 'adm'
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' or ansible_distribution == 'OracleLinux'
+
+- name: Set the correct admin group for Ubuntu and Debian
+  set_fact:
+    admin_group: 'sudo,render'
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
 - name: Add the user '{{vault_ansible_user}}' with a specific uid and a primary group of 'admin'
   ansible.builtin.user:
     name: '{{vault_ansible_user}}'
@@ -36,7 +46,7 @@
     uid: '{{vault_ansible_user_uid}}'
     group: '{{vault_ansible_user_group}}'
     shell: /bin/zsh
-    groups: sudo,wheel,render,users
+    groups: "{{admin_group}},wheel,users"
     append: yes
     password: '{{ vault_ansible_user_password}}'
   tags: common-configuration

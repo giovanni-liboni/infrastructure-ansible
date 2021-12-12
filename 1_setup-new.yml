@@ -165,4 +165,13 @@
         name: ubuntu
         state: absent
         remove: yes
-        
+ 
+- name: Playbook to configure IPA server
+  hosts: ipaserver
+  become: true
+  collections:
+    - freeipa.ansible_freeipa
+  tasks:
+    - import_role:
+        name: ipaserver
+     
