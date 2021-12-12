@@ -46,13 +46,6 @@
 #     name: restic
 #     state: latest
 #   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-
-
-- name: Set the correct admin group for Ubuntu and Debian
-  set_fact:
-    admin_group: 'sudo'
-  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
-
     
 - include_tasks: welcome.yml
 
