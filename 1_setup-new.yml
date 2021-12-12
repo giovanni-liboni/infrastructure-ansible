@@ -147,22 +147,22 @@
   vars:
     idmapd_domain: '{{domain_tld}}'
 
-- name: Remove the user 'ubuntu'
-  hosts: all
-  become: yes
-  tasks:
-    # - debug:
-    #     msg: |
-    #       ansible_user: {{ ansible_user | d('unset') }};
-    #       remote_user: {{ remote_user | d('unset') }}
-    - name: Change remote user
-      set_fact:
-        current_user: '{{ vault_ansible_user }}'
-        ansible_user: '{{ vault_ansible_user }}'
-        remote_user: '{{ vault_ansible_user }}'
-    - name: Remove the user 'ubuntu'
-      user:
-        name: ubuntu
-        state: absent
-        remove: yes
+# - name: Remove the user 'ubuntu'
+#   hosts: all
+#   become: yes
+#   tasks:
+#     # - debug:
+#     #     msg: |
+#     #       ansible_user: {{ ansible_user | d('unset') }};
+#     #       remote_user: {{ remote_user | d('unset') }}
+#     - name: Change remote user
+#       set_fact:
+#         current_user: '{{ vault_ansible_user }}'
+#         ansible_user: '{{ vault_ansible_user }}'
+#         remote_user: '{{ vault_ansible_user }}'
+#     - name: Remove the user 'ubuntu'
+#       user:
+#         name: ubuntu
+#         state: absent
+#         remove: yes
         
