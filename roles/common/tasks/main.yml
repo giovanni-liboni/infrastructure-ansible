@@ -1,21 +1,22 @@
 ---
-- name: Install defaults packages
+- include_tasks: install-packages-debian.yml
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- include_tasks: install-packages-centos.yml
+  when: ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '8'
+
+- name: Install common defaults packages
   package:
     name:
       - vim
       - tmux
       - sudo
       - zsh
-      - magic-wormhole
-      - nfs-common
-      - restic
       - git
-      - figlet # Required by welcome
       - quota  # Required by welcome
-      - nfs-common
     state: present
   tags: common-configuration
-    
+
 - include_tasks: welcome.yml
 
 - include_tasks: mount-nfs.yml
