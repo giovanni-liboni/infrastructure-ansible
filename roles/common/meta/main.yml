@@ -6,7 +6,5 @@ galaxy_info:
   license: MIT
   min_ansible_version: 1.2
 dependencies:
-  - manala.vim
-  - ansible-role-idmapd
   - geerlingguy.nfs
   - arillso.restic
