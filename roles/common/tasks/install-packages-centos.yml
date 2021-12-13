@@ -1,0 +1,7 @@
+---
+- name: Install figlet on CentOS 8
+  yum:
+    name: https://download-ib01.fedoraproject.org/pub/epel/8/Everything/aarch64/Packages/f/figlet-2.2.5-18.20151018gita565ae1.el8.aarch64.rpm
+    state: present
+    disable_gpg_check: True
+  when: ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '8'
