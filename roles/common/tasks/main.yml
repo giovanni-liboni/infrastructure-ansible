@@ -20,6 +20,7 @@
 - include_tasks: welcome.yml
 
 - include_tasks: mount-nfs.yml
+  when: nfsmounts is defined
 
 - include_tasks: idmapd.yml
-  when: idmapd_enabled
+  when: idmapd_enabled is defined and idmapd_enabled
