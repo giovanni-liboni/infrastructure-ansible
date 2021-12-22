@@ -1,0 +1,8 @@
+---
+- name: Restart FreeIPA
+  community.general.docker_container:
+    name: freeipa
+    container_default_behavior: compatibility
+    restart: yes
+  listen: restart freeipa
+

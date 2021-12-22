@@ -4,6 +4,7 @@
     path: "{{item.path}}"
     state: directory
   with_items: "{{nfsmounts}}"
+  when: nfsmounts is defined
   tags: mount-nfs
 
 - name: mount the nfsshare in client side
@@ -14,3 +15,4 @@
     src: "{{item.src}}"
     path: "{{item.path}}"
   with_items: "{{nfsmounts}}"
+  when: nfsmounts is defined

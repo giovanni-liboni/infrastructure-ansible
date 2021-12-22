@@ -1,0 +1,10 @@
+---
+ipaadmin_password: '{{vault_ansible_user_password}}'
+ipaadmin_principal: admin
+ipaserver_domain: '{{vault_domain_tld}}'
+ipaserver_realm: '{{vault_domain_tld | upper}}'
+ipaclient_mkhomedir: true
+ipaclient_servers: 'ipa.{{vault_domain_tld}}'
+sshd_custom_options:
+  - "AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys"
+  - "AuthorizedKeysCommandUser nobody"

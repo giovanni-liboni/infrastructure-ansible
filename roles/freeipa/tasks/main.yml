@@ -1,0 +1,47 @@
+---
+- name: Ensure FreeIPA Directory Exist
+  file:
+    path: "{{ project_directory }}/freeipa/{{item}}"
+    state: directory
+  with_items:
+    - config
+    - data
+  tags: freeipa
+  
+# Exposed port 9091
+- name: Create Authelia Docker Container
+  community.general.docker_container:
+    name: freeipa
+    image: "freeipa-server:latest"
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    pull: yes
+    hostname: 'ipa.{{domain_tld}}'
+    container_default_behavior: compatibility
+    network_mode: default
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/freeipa/config:/config"
+      - "{{project_directory}}/freeipa/data:/data"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    env:
+      # https://www.authelia.com/docs/configuration/secrets.html
+      AUTHELIA_JWT_SECRET_FILE: "/config/authelia_jwt_secret"
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: "/config/authelia_authetication_backend_ldap_password_secret"
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: "/config/authelia_smtp_password"
+      AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE: "/config/authelia_db_password"
+      AUTHELIA_SESSION_SECRET_FILE: "/config/authelia_session_secret"
+    labels:
+      # HTTP Routers
+      traefik.http.routers.freeipa.rule: "Host(`login.{{vault_domain_tld}}`)"
+      traefik.http.routers.freeipa.entrypoints: "websecure"
+      traefik.http.routers.freeipa.tls: "true"
+      traefik.http.routers.freeipa.tls.options: "default"
+      traefik.enable: "true"
+  tags: freeipa
