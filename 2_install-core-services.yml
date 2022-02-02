@@ -17,7 +17,6 @@
   become: yes 
   roles:
     - tecnativa
-    - traefik
     - redis
     - mariadb
     - authelia
@@ -28,6 +27,7 @@
     - fail2ban
     - psitransfer
     - pwndrop
+    - traefik
 
 - name: Register DNS names in Mikrotik
   hosts: routeros

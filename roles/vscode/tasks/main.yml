@@ -72,13 +72,13 @@
   ansible.builtin.shell: docker exec -u 0 vscode bash -c "chmod 644 /config/.ssh/id_rsa"
   tags: vscode
 
-- name: Update apt
-  ansible.builtin.shell: docker exec -u 0 vscode bash -c "apt update"
-  tags: vscode
+# - name: Update apt
+#   ansible.builtin.shell: docker exec -u 0 vscode bash -c "apt update"
+#   tags: vscode
   
-- name: Install Chromium
-  ansible.builtin.shell: docker exec -u 0 vscode bash -c "apt install -y chromium-browser"
-  tags: vscode
+# - name: Install Chromium
+#   ansible.builtin.shell: docker exec -u 0 vscode bash -c "apt install -y chromium-browser"
+#   tags: vscode
 
 
 - name: Add FQDN to the list of services available for '{{project_tld}}'

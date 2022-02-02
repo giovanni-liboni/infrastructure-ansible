@@ -123,15 +123,15 @@ regulation:
 
 storage:
   encryption_key: {{authelia_encryption_key}}
-  # local:
-  #   path: /config/db.sqlite3
-  mysql:
-    host: mariadb
-    port: 3306
-    database: authelia
-    username: {{authelia_db_username}}
-    # Password can also be set using the env variables AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE
-    # password: PASSWORD_GOES_HERE # use docker secret file instead AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE
+  local:
+    path: /config/db.sqlite3
+  #mysql:
+  #  host: mariadb
+  #  port: 3306
+  #  database: authelia
+  #  username: {{authelia_db_username}}
+  #  # Password can also be set using the env variables AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE
+  #  # password: PASSWORD_GOES_HERE # use docker secret file instead # AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE
 
 notifier:
   # filesystem:

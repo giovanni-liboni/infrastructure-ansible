@@ -69,12 +69,12 @@
   notify: restart authelia
   tags: authelia
 
-- import_tasks: roles/mariadb/tasks/database_manager.yml
-  vars:
-    database_name: "authelia"
-    database_user: "authelia"
-    database_password: "{{authelia_db_password}}"
-  tags: authelia
+# - import_tasks: roles/mariadb/tasks/database_manager.yml
+#   vars:
+#     database_name: "authelia"
+#     database_user: "authelia"
+#     database_password: "{{authelia_db_password}}"
+#   tags: authelia
 
 # Exposed port 9091
 - name: Create Authelia Docker Container
