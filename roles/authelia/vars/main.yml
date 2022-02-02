@@ -9,6 +9,7 @@ smtp_sender: "{{vault_smtp_sender}}"
 authelia_db_username: "authelia"
 authelia_db_password: "{{vault_authelia_db_password}}"
 authelia_session_secret: "{{vault_authelia_session_secret}}"
+authelia_encryption_key: "{{vault_authelia_encryption_key}}"
 domain_tld: '{{vault_domain_tld}}'
 project_tld: '{{vault_project_tld}}'
 user_display_name: "{{vault_authelia_user_display_name}}"
